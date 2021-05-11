@@ -13,6 +13,11 @@
 #define HEIGHT 600
 
 typedef struct AppData {
+    //everytime you select a directory- destroy exisiting, create new text based
+    //textures, every interaction after DO NOT RECREATE
+
+    //With the rendering of textures, Don't draw the ones above and below, if y value is on
+    //screen render, otherwise don't render.
     TTF_Font *font;
     SDL_Texture *fileIcon;
     SDL_Texture *directoryIcon;
@@ -20,7 +25,7 @@ typedef struct AppData {
     SDL_Texture *penguin;
     SDL_Texture *phrase;
     SDL_Rect penguin_location;
-    SDL-Rect phrase_location;
+    SDL_Rect phrase_location;
     bool penguin_selected;
     bool phrase_selected;
     SDL_Point penguin_offset;
@@ -62,48 +67,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-AppData data;
-    initialize(renderer, &data);
-    render(renderer, &data);
-    SDL_Event event;
-    SDL_WaitEvent(&event);
-    while (event.type != SDL_QUIT)
-    {
-        SDL_WaitEvent(&event);
-        switch (event.type) {
-            case SDL_MOUSEMOTION:
-                if (data.phrase_selected) {
-                    data.phrase_location.x =  event.motion.x - data.phrase_offset.x;
-                    data.phrase_location.y =  event.motion.y - data.phrase_offset.y;
-                } else if (data.penguin_selected) {
-
-                }
-                break;
-            case SDL_MOUSEBUTTONDOWN:
-                if (event.button.x >= data.phrase_location.x && data.phrase_location.x + data.phrase_location.w && event.button.x >= data.phrase_location.y && data.phrase_location.y + data.phrase_location.h) {
-                        data.phrase_selected = true;
-                        data.phrase_offset.x = event.button.x -data.phrase_location.x;
-                        data.phrase_offset.y = event.button.y - data.phrase_location.y;
-                }
-                break;
-            case SDL_MOUSEBUTTONUP:
-                break;
-        }
-
-        render(renderer, &data);
-    }
-
-    // clean up
-    quit(&data);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    TTF_Quit();
-    IMG_Quit();
-    SDL_Quit();
-
-
-    return 0;
-}
+    
 
 void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
     data_ptr->font = TTF_OpenFont("resrc/OpenSans-Regular.ttf", 24);
