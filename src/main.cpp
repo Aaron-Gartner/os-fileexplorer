@@ -62,21 +62,96 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void initialize(SDL_Renderer *renderer)
-{
-    // set color of background when erasing frame
-    SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
+AppData data;
+    initialize(renderer, &data);
+    render(renderer, &data);
+    SDL_Event event;
+    SDL_WaitEvent(&event);
+    while (event.type != SDL_QUIT)
+    {
+        SDL_WaitEvent(&event);
+        switch (event.type) {
+            case SDL_MOUSEMOTION:
+                if (data.phrase_selected) {
+                    data.phrase_location.x =  event.motion.x - data.phrase_offset.x;
+                    data.phrase_location.y =  event.motion.y - data.phrase_offset.y;
+                } else if (data.penguin_selected) {
+
+                }
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                if (event.button.x >= data.phrase_location.x && data.phrase_location.x + data.phrase_location.w && event.button.x >= data.phrase_location.y && data.phrase_location.y + data.phrase_location.h) {
+                        data.phrase_selected = true;
+                        data.phrase_offset.x = event.button.x -data.phrase_location.x;
+                        data.phrase_offset.y = event.button.y - data.phrase_location.y;
+                }
+                break;
+            case SDL_MOUSEBUTTONUP:
+                break;
+        }
+
+        render(renderer, &data);
+    }
+
+    // clean up
+    quit(&data);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    TTF_Quit();
+    IMG_Quit();
+    SDL_Quit();
+
+
+    return 0;
 }
 
-void render(SDL_Renderer *renderer)
-{
+void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
+    data_ptr->font = TTF_OpenFont("resrc/OpenSans-Regular.ttf", 24);
+
+    SDL_Surface *img_surf = IMG_Load("resrc/images/linux-penguin.png");
+    data_ptr->penguin = SDL_CreateTextureFromSurface(renderer, img_surf);
+    SDL_FreeSurface(img_surf);
+    data_ptr->penguin_location.x = 200;
+    data_ptr->penguin_location.y = 100;
+    data_ptr->penguin_location.w = 165;
+    data_ptr->penguin_location.h = 200;
+
+    SDL_Color color = { 0, 0, 0 };
+    SDL_Surface *phrase_surf = TTF_RenderText_Solid(data_ptr->font, "Hello World!", color);
+    data_ptr->phrase = SDL_CreateTextureFromSurface(renderer, phrase_surf);
+    SDL_FreeSurface(phrase_surf);
+}
+
+void render(SDL_Renderer *renderer, AppData *data_ptr) {
     // erase renderer content
+    SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
     SDL_RenderClear(renderer);
     
     // TODO: draw!
+    SDL_Rect rect;
+    rect.x = 200;
+    rect.y = 100;
+    rect.w = 165;
+    rect.h = 200;
+    SDL_RenderCopy(renderer, data_ptr->penguin, NULL, &rect);
+
+    rect.x = 400;
+    rect.y = 300;
+    SDL_RenderCopy(renderer, data_ptr->penguin, NULL, &rect);
+
+    SDL_QueryTexture(data_ptr->phrase, NULL, NULL, &(rect.w), &(rect.h));
+    rect.x = 10;
+    rect.y = 500;
+    SDL_RenderCopy(renderer, data_ptr->phrase, NULL, &rect);
 
     // show rendered frame
     SDL_RenderPresent(renderer);
+}
+
+void quit(AppData *data_ptr) {
+    SDL_DestroyTexture(data_ptr->penguin);
+    SDL_DestroyTexture(data_ptr->phrase);
+    TTF_CloseFont(data_ptr->font);
 }
 
 void listDirectoryNon_Rec(std::string dirname) {
@@ -98,12 +173,12 @@ void listDirectoryNon_Rec(std::string dirname) {
         std::sort(filenames.begin(), filenames.end());
         struct stat file_info;
         for(int i = 0; i < filenames.size(); i++){
-            err = stat(dirname.c_str()+"/"+filenames[i].c_str(), &file_info);
+            err = stat(dirname + "/" + filenames[i], &file_info);
             if (err) {
                 fprintf(stderr, "File does not exist");
             } else {
                 if(S_ISDIR(file_info.st_mode)){
-                    printf("%s (Directory)\n", files[i].c_str());
+                    printf("%s (Directory)\n", filenames[i].c_str());
                 } else {
                     printf("%s (%ld bytes)\n", filenames[i].c_str(), file_info.st_size);
                 }
