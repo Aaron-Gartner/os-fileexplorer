@@ -172,7 +172,6 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
 }
 
 void quit(AppData *data_ptr) {
-    //TODO Question: How to destory the textures properly?
     SDL_DestroyTexture(data_ptr->icons[directory_icon]);
     SDL_DestroyTexture(data_ptr->icons[code_icon]);
     SDL_DestroyTexture(data_ptr->icons[other_icon]);
@@ -211,8 +210,9 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     toPush->file_name_rect.y = y;
                     toPush->file_name_rect.w = 40;
                     toPush->file_name_rect.h = 30;
-                    //TODO Question: what to set here? 
-                    //Look at the portion for hello world
+                    //TODO Question: what to set for file_name_text? 
+                    //Look at video (the portion for hello world)
+                    //TODO:Alex look at the video and see what to assign for file_name_texture
                     toPush->file_name_texture ;
                     toPush->type = directory_icon; 
                     toPush->icon_rect.x = 0;
@@ -221,7 +221,7 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     toPush->icon_rect.h = 30;
                     file_list.push_back(toPush);
                 } else {
-                    //TODO Question: How to figure out what file type is to properly assign? Since all lengths are different between .jpeg vs .cpp vs .gif
+                    //TODO: Alex implement here if/elses to properly assign file type
                     //find the loction of the last dot then take the substring from the dot to the rest of the string
                     //how you fill fields will be different
                     drawItem *toPush = new drawItem();
