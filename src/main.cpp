@@ -77,6 +77,7 @@ int main(int argc, char **argv)
          SDL_WaitEvent(&event);
         switch (event.type) {
             case SDL_MOUSEMOTION:
+                //implement a button on the top and bottom not a scroll bar
                 /*
                 if (data.directory_icon_selected || data.directory_name_selected) {
                     data.phrase_location.x =  event.motion.x - data.phrase_offset.x;
@@ -130,29 +131,29 @@ int main(int argc, char **argv)
 
 void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
     data_ptr->font = TTF_OpenFont("resrc/OpenSans-Regular.ttf", 14);
-    //TODO Question: how to make the assignment properly render?
+
     SDL_Surface *img_surf = IMG_Load("resrc/images/directory_icon.png");
-    drawItem->icon_type->directory_icon = SDL_CreateTextureFromSurface(renderer, img_surf);
+    data_ptr->icons[directory_icon] = SDL_CreateTextureFromSurface(renderer, img_surf);
     SDL_FreeSurface(img_surf);
-    //TODO Question: should be using if/elses here?
+    
     SDL_Surface *img_surf2 = IMG_Load("resrc/images/code_icon.png");
-    drawItem->icon_type->code_icon = SDL_CreateTextureFromSurface(renderer, img_surf2);
+    data_ptr->icons[code_icon] = SDL_CreateTextureFromSurface(renderer, img_surf2);
     SDL_FreeSurface(img_surf2);
 
     SDL_Surface *img_surf3 = IMG_Load("resrc/images/other_icon.png");
-    drawItem->icon_type->other_icon = SDL_CreateTextureFromSurface(renderer, img_surf3);
+    data_ptr->icons[other_icon] = SDL_CreateTextureFromSurface(renderer, img_surf3);
     SDL_FreeSurface(img_surf);
 
     SDL_Surface *img_surf4 = IMG_Load("resrc/images/image_icon.png");
-    drawItem->icon_type->image_icon = SDL_CreateTextureFromSurface(renderer, img_surf4);
+    data_ptr->icons[image_icon] = SDL_CreateTextureFromSurface(renderer, img_surf4);
     SDL_FreeSurface(img_surf4);
 
     SDL_Surface *img_surf5 = IMG_Load("resrc/images/video_icon.png");
-    drawItem->icon_type->video_icon = SDL_CreateTextureFromSurface(renderer, img_surf5);
+    data_ptr->icons[video_icon] = SDL_CreateTextureFromSurface(renderer, img_surf5);
     SDL_FreeSurface(img_surf5);
 
     SDL_Surface *img_surf6 = IMG_Load("resrc/images/executable_icon.png");
-    drawItem->icon_type->excutable_icon = SDL_CreateTextureFromSurface(renderer, img_surf6);
+    data_ptr->icons[executable_icon] = SDL_CreateTextureFromSurface(renderer, img_surf6);
     SDL_FreeSurface(img_surf6);
 
 }
@@ -171,6 +172,13 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
 }
 
 void quit(AppData *data_ptr) {
+    //TODO Question: How to destory the textures properly?
+    SDL_DestroyTexture(data_ptr->icons[directory_icon]);
+    SDL_DestroyTexture(data_ptr->icons[code_icon]);
+    SDL_DestroyTexture(data_ptr->icons[other_icon]);
+    SDL_DestroyTexture(data_ptr->icons[image_icon]);
+    SDL_DestroyTexture(data_ptr->icons[video_icon]);
+    SDL_DestroyTexture(data_ptr->icons[executable_icon]);
     TTF_CloseFont(data_ptr->font);
 }
 
@@ -190,9 +198,9 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
         }
         std::sort(filenames.begin(), filenames.end());
         struct stat file_info;
+        int y = 20;
         for(int i = 0; i < filenames.size(); i++) {
-            //TODO Question: why doesn't it like this line?
-            err = stat(dirname + "/" + filenames[i], &file_info);
+            err = stat((dirname + "/" + filenames[i]).c_str(), &file_info);
             if (err) {
                 fprintf(stderr, "File does not exist");
             } else {
@@ -200,25 +208,35 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     drawItem *toPush = new drawItem();
                     //fill in fields toPush
                     toPush->file_name_rect.x = 0;
-                    toPush->file_name_rect.y = 20;
+                    toPush->file_name_rect.y = y;
                     toPush->file_name_rect.w = 40;
                     toPush->file_name_rect.h = 30;
-                    //TODO Question: what to set here?
+                    //TODO Question: what to set here? 
+                    //Look at the portion for hello world
                     toPush->file_name_texture ;
-                    //TODO Question: is this the proper way to set?
                     toPush->type = directory_icon; 
                     toPush->icon_rect.x = 0;
-                    toPush->icon_rect.y = 20;
+                    toPush->icon_rect.y = y;
                     toPush->icon_rect.w = 40;
                     toPush->icon_rect.h = 30;
                     file_list.push_back(toPush);
                 } else {
                     //TODO Question: How to figure out what file type is to properly assign? Since all lengths are different between .jpeg vs .cpp vs .gif
+                    //find the loction of the last dot then take the substring from the dot to the rest of the string
                     //how you fill fields will be different
                     drawItem *toPush = new drawItem();
+                    toPush->file_name_rect.x = 0;
+                    toPush->file_name_rect.y = y;
+                    toPush->file_name_rect.w = 40;
+                    toPush->file_name_rect.h = 30;
+                    toPush->icon_rect.x = 0;
+                    toPush->icon_rect.y = y;
+                    toPush->icon_rect.w = 40;
+                    toPush->icon_rect.h = 30;
                     //fill in fields toPush
                     file_list.push_back(toPush);
                 }
+                y += 10;
             }
         }
         closedir(dir);
