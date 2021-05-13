@@ -197,6 +197,7 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
         }
         std::sort(filenames.begin(), filenames.end());
         struct stat file_info;
+        //Declared here to ensure items don't render on top of eachother
         int y = 20;
         for(int i = 0; i < filenames.size(); i++) {
             err = stat((dirname + "/" + filenames[i]).c_str(), &file_info);
