@@ -19,9 +19,12 @@ typedef struct AppData {
     //With the rendering of textures, Don't draw the ones above and below, if y value is on
     //screen render, otherwise don't render.
     TTF_Font *font;
-    SDL_Texture *fileIcon;
-    SDL_Texture *directoryIcon;
-    SDL_Texture *ExecutableIcon;
+    SDL_Texture *code_icon;
+    SDL_Texture *directory_icon;
+    SDL_Texture *executable_icon;
+    SDL_Texture *image_icon;
+    SDL_Texture *video_icon;
+    SDL_Texture *other_icon;
     SDL_Texture *penguin;
     SDL_Texture *phrase;
     SDL_Rect penguin_location;
@@ -72,9 +75,31 @@ int main(int argc, char **argv)
 void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
     data_ptr->font = TTF_OpenFont("resrc/OpenSans-Regular.ttf", 24);
 
-    SDL_Surface *img_surf = IMG_Load("resrc/images/linux-penguin.png");
-    data_ptr->penguin = SDL_CreateTextureFromSurface(renderer, img_surf);
+    SDL_Surface *img_surf = IMG_Load("resrc/images/directory_icon.png");
+    data_ptr->directory_icon = SDL_CreateTextureFromSurface(renderer, img_surf);
     SDL_FreeSurface(img_surf);
+
+    SDL_Surface *img_surf2 = IMG_Load("resrc/images/code_icon.png");
+    data_ptr->code_icon = SDL_CreateTextureFromSurface(renderer, img_surf2);
+    SDL_FreeSurface(img_surf2);
+
+    SDL_Surface *img_surf3 = IMG_Load("resrc/images/other_icon.png");
+    data_ptr->other_icon = SDL_CreateTextureFromSurface(renderer, img_surf3);
+    SDL_FreeSurface(img_surf);
+
+    SDL_Surface *img_surf4 = IMG_Load("resrc/images/image_icon.png");
+    data_ptr->image_icon = SDL_CreateTextureFromSurface(renderer, img_surf4);
+    SDL_FreeSurface(img_surf4);
+
+    SDL_Surface *img_surf5 = IMG_Load("resrc/images/video_icon.png");
+    data_ptr->video_icon = SDL_CreateTextureFromSurface(renderer, img_surf5);
+    SDL_FreeSurface(img_surf5);
+
+    SDL_Surface *img_surf6 = IMG_Load("resrc/images/directory_icon.png");
+    data_ptr->directory_icon = SDL_CreateTextureFromSurface(renderer, img_surf6);
+    SDL_FreeSurface(img_surf6);
+
+
     data_ptr->penguin_location.x = 200;
     data_ptr->penguin_location.y = 100;
     data_ptr->penguin_location.w = 165;
@@ -93,11 +118,11 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
     
     // TODO: draw!
     SDL_Rect rect;
-    rect.x = 200;
-    rect.y = 100;
-    rect.w = 165;
-    rect.h = 200;
-    SDL_RenderCopy(renderer, data_ptr->penguin, NULL, &rect);
+    rect.x = 10;
+    rect.y = 10;
+    rect.w = 10;
+    rect.h = 10;
+    SDL_RenderCopy(renderer, data_ptr->directory_icon, NULL, &rect);
 
     rect.x = 400;
     rect.y = 300;
