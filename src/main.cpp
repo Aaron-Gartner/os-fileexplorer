@@ -46,7 +46,7 @@ typedef struct AppData {
     bool other_filename_selected;
 } AppData;
 
-void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list);
+void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list, SDL_Renderer *renderer, AppData *data_ptr);
 void initialize(SDL_Renderer *renderer, AppData *data_ptr);
 void render(SDL_Renderer *renderer, AppData *data_ptr);
 void quit(AppData *data_ptr);
@@ -58,8 +58,8 @@ int main(int argc, char **argv)
 
     // initializing SDL as Video
     SDL_Init(SDL_INIT_VIDEO);
-    IMG_Init(IMG_INIT_PNG);
-
+    IMG_Init(IMG_INIT_PNG);+
+    TTF_Init();
     // create window and renderer
     SDL_Renderer *renderer;
     SDL_Window *window;
@@ -71,10 +71,13 @@ int main(int argc, char **argv)
     render(renderer, &data);
     SDL_Event event;
     SDL_WaitEvent(&event);
+
     while (event.type != SDL_QUIT) {
         //render(renderer);
-        listDirectoryNon_Rec(home, data->file_list);
-         SDL_WaitEvent(&event);
+        listDirectoryNon_Rec(home, data.file_list, renderer, &data);
+        SDL_WaitEvent(&event);
+
+
         switch (event.type) {
             case SDL_MOUSEMOTION:
                 //implement a button on the top and bottom not a scroll bar
@@ -124,6 +127,7 @@ int main(int argc, char **argv)
     SDL_DestroyWindow(window);
     SDL_Quit();
     IMG_Quit();
+    TTF_Quit();
     return 0;
 }
 
@@ -181,7 +185,7 @@ void quit(AppData *data_ptr) {
     TTF_CloseFont(data_ptr->font);
 }
 
-void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list) {
+void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list, SDL_Renderer *renderer, AppData *data_ptr) {
     for (int i = 0; i < file_list.size(); i++) {
         SDL_DestroyTexture(file_list[i]->file_name_texture);
     }
@@ -214,7 +218,13 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     //TODO Question: what to set for file_name_text? 
                     //Look at video (the portion for hello world)
                     //TODO:Alex look at the video and see what to assign for file_name_texture
-                    toPush->file_name_texture ;
+
+                    SDL_Color Phrase_color = { 0, 0, 0 };
+                    SDL_Surface *file_name = TTF_RenderText_Solid(data_ptr->font, dirname.c_str(), Phrase_color);
+                    toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, file_name);
+                    SDL_FreeSurface(file_name); //Do we even need this?
+
+
                     toPush->type = directory_icon; 
                     toPush->icon_rect.x = 0;
                     toPush->icon_rect.y = y;
