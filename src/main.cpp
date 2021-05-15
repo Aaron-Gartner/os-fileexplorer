@@ -17,14 +17,10 @@ enum icon_type {
 };
 
 typedef struct drawItem {
-    std::string name;
-    std::string path;
-    int size;
-
     SDL_Rect file_name_rect;
     SDL_Surface *file_name_surface;
     SDL_Texture *file_name_texture;
-    icon_type type; 
+    icon_type type;
     SDL_Rect icon_rect; 
 } drawItem;
 
@@ -144,10 +140,11 @@ void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
     //Creates text
     SDL_Color text_color = { 0, 0, 0 };
     data_ptr->font = TTF_OpenFont("resrc/OpenSans-Regular.ttf", 14);
+    /*
     for (int i = 0; i < data_ptr->file_list.size(); i++) {
         data_ptr->file_list[i]->file_name_texture = SDL_CreateTextureFromSurface(renderer, data_ptr->file_list[i]->file_name_surface);
         SDL_FreeSurface(data_ptr->file_list[i]->file_name_surface);
-    }
+    }*/
     
     
     SDL_Surface *img_surf = IMG_Load("resrc/images/directory_icon.png");
