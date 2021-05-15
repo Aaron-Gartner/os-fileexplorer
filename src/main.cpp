@@ -17,10 +17,6 @@ enum icon_type {
 };
 
 typedef struct drawItem {
-    std::string name;
-    std::string path;
-    int size;
-
     SDL_Rect file_name_rect;
     SDL_Surface *file_name_surface;
     SDL_Texture *file_name_texture;
@@ -86,24 +82,7 @@ int main(int argc, char **argv)
 
 
         switch (event.type) {
-            case SDL_MOUSEMOTION:
-                //implement a button on the top and bottom not a scroll bar
-                /*
-                if (data.directory_icon_selected || data.directory_name_selected) {
-                    data.phrase_location.x =  event.motion.x - data.phrase_offset.x;
-                    data.phrase_location.y =  event.motion.y - data.phrase_offset.y;
-                } else if (data.executable_icon_selected || data.executable_name_selected) {
-
-                } else if (data.image_icon_selected || data.image_filename_selected) {
-
-                } else if (data.video_icon_selected || data.video_filename_selected) {
-
-                } else if (data.code_icon_selected || data.code_filename_selected) {
-
-                } else if (data.other_icon_selected || data.other_filename_selected) {
-
-                }*/
-                break;
+            //implement a button on the top and bottom not a scroll bar
             case SDL_MOUSEBUTTONDOWN:
                 /*
                 if (event.button.x >= data.directory_icon_location.x && data.directory_icon_location.x + data.directory_icon_location.w && event.button.x >= data.directory_icon_location.y && data.directory_icon_location.y + data.directory_icon_location.h) {
@@ -146,7 +125,6 @@ void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
     data_ptr->font = TTF_OpenFont("resrc/OpenSans-Regular.ttf", 14);
     for (int i = 0; i < data_ptr->file_list.size(); i++) {
         data_ptr->file_list[i]->file_name_texture = SDL_CreateTextureFromSurface(renderer, data_ptr->file_list[i]->file_name_surface);
-        SDL_FreeSurface(data_ptr->file_list[i]->file_name_surface);
     }
     
     
@@ -182,8 +160,8 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
     SDL_RenderClear(renderer);
     for(int i = 0; i < data_ptr->file_list.size(); i++) {
         //icon, name, size, value
-        SDL_QueryTexture(data_ptr->file_list[i]->file_name_texture, NULL, NULL, &(data_ptr->file_list[i]->file_name_rect.w), &(data_ptr->file_list[i]->file_name_rect.h));
-        SDL_RenderCopy(renderer, data_ptr->file_list[i]->file_name_texture, &(data_ptr->file_list[i]->file_name_rect), &(data_ptr->file_list[i]->icon_rect));
+       SDL_QueryTexture(data_ptr->file_list[i]->file_name_texture, NULL, NULL, &(data_ptr->file_list[i]->file_name_rect.w), &(data_ptr->file_list[i]->file_name_rect.h));
+       SDL_RenderCopy(renderer, data_ptr->file_list[i]->file_name_texture, &(data_ptr->file_list[i]->file_name_rect), &(data_ptr->file_list[i]->icon_rect));
     }
 
     // show rendered frame
@@ -197,6 +175,7 @@ void quit(AppData *data_ptr) {
     SDL_DestroyTexture(data_ptr->icons[image_icon]);
     SDL_DestroyTexture(data_ptr->icons[video_icon]);
     SDL_DestroyTexture(data_ptr->icons[executable_icon]);
+    //TODO Question: Do we need to destroy our text textures by using a for loop?
     TTF_CloseFont(data_ptr->font);
 }
 
@@ -204,8 +183,6 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
     for (int i = 0; i < file_list.size(); i++) {
         SDL_DestroyTexture(file_list[i]->file_name_texture);
     }
-
-    std::cout << dirname << std::endl;
     file_list.clear();
     struct stat info;
     int err = stat(dirname.c_str(), &info);
@@ -225,7 +202,7 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
             if (err) {
                 fprintf(stderr, "File does not exist");
             } else {
-                if(S_ISDIR(file_info.st_mode)){
+                if(S_ISDIR(file_info.st_mode)) {
                     drawItem *toPush = new drawItem();
                     //fill in fields toPush
                     toPush->file_name_rect.x = 0;
@@ -234,8 +211,8 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     //Look at video (the portion for hello world)
                     SDL_Color text_color = { 0, 0, 0 };
                     toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), text_color);
-                    toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, data_ptr->file_list[i]->file_name_surface);
-                    SDL_FreeSurface(data_ptr->file_list[i]->file_name_surface);
+                    toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
+                    SDL_FreeSurface(toPush->file_name_surface);
                     toPush->type = directory_icon; 
                     toPush->icon_rect.x = 0;
                     toPush->icon_rect.y = y;
@@ -246,36 +223,11 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     //TODO: Alex implement here if/elses to properly assign file type
                     //find the loction of the last dot then take the substring from the dot to the rest of the string
                     //how you fill fields will be different
-                    for(int i=0; i < file_list.size(); i++){
-
-                        std::string file_extension = filenames[i].substr(filenames[i].find('.'));
-
-                        if(file_extension == ".jpg" || file_extension == ".jpeg" || file_extension == ".png" || file_extension == ".tif" 
-                        || file_extension == ".tiff" || file_extension == ".gif"){
-
-                            file_list[i]->type = image_icon;
-
-                        }else if(file_extension == ".mp4" || file_extension == ".mov" || file_extension == ".mkv" || file_extension == ".avi" 
-                        || file_extension == ".webm"){
-
-                            file_list[i]->type = video_icon;
-
-                        }else if(file_extension == ".h" || file_extension == ".c" || file_extension == ".cpp" || file_extension == ".py" 
-                        || file_extension == ".java" || file_extension == ".js"){
-
-                            file_list[i]->type = video_icon;
-
-                        }else{
-
-                            file_list[i]->type = other_icon;
-
-                        }
-                            
-                        
-
-
-                    }
                     drawItem *toPush = new drawItem();
+                    SDL_Color text_color = { 0, 0, 0 };
+                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), text_color);
+                    toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
+                    SDL_FreeSurface(toPush->file_name_surface);
                     toPush->file_name_rect.x = 0;
                     toPush->file_name_rect.y = y;
                     toPush->file_name_rect.w = 40;
@@ -284,12 +236,39 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     toPush->icon_rect.y = y;
                     toPush->icon_rect.w = 40;
                     toPush->icon_rect.h = 30;
-                    //fill in fields toPush
+                    for(int i=0; i < file_list.size(); i++){
+
+                        std::string file_extension = filenames[i].substr(filenames[i].find('.'));
+
+                        if(file_extension == ".jpg" || file_extension == ".jpeg" || file_extension == ".png" || file_extension == ".tif" 
+                        || file_extension == ".tiff" || file_extension == ".gif") {
+
+                            toPush->type = image_icon;
+
+                        }else if(file_extension == ".mp4" || file_extension == ".mov" || file_extension == ".mkv" || file_extension == ".avi" 
+                        || file_extension == ".webm") {
+
+                            toPush->type = video_icon;
+
+                        }else if(file_extension == ".h" || file_extension == ".c" || file_extension == ".cpp" || file_extension == ".py" 
+                        || file_extension == ".java" || file_extension == ".js") {
+
+                            toPush->type = video_icon;
+
+                        }else {
+
+                            toPush->type = other_icon;
+
+                        }
+
+                    }
+                   
                     file_list.push_back(toPush);
                 }
                 y += 10;
             }
         }
+        render(renderer, data_ptr);
         closedir(dir);
     }
     else
