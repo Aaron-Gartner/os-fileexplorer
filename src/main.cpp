@@ -17,6 +17,10 @@ enum icon_type {
 };
 
 typedef struct drawItem {
+    std::string name;
+    std::string path;
+    int size;
+
     SDL_Rect file_name_rect;
     SDL_Texture *file_name_texture;
     icon_type type; 
@@ -165,7 +169,7 @@ void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
 void render(SDL_Renderer *renderer, AppData *data_ptr) {
     // erase renderer content
     SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
-    SDL_RenderClear(renderer); 
+    SDL_RenderClear(renderer);
     for(int i = 0; i < data_ptr->file_list.size(); i++) {
         //icon, name, size, value
         SDL_RenderCopy(renderer, data_ptr->file_list[i]->file_name_texture, &(data_ptr->file_list[i]->file_name_rect), &(data_ptr->file_list[i]->icon_rect));
@@ -189,6 +193,8 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
     for (int i = 0; i < file_list.size(); i++) {
         SDL_DestroyTexture(file_list[i]->file_name_texture);
     }
+
+    std::cout << dirname << std::endl;
     file_list.clear();
     struct stat info;
     int err = stat(dirname.c_str(), &info);
@@ -235,6 +241,35 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     //TODO: Alex implement here if/elses to properly assign file type
                     //find the loction of the last dot then take the substring from the dot to the rest of the string
                     //how you fill fields will be different
+                    for(int i=0; i < file_list.size(); i++){
+
+                        std::string file_extension = filenames[i].substr(filenames[i].find('.'));
+
+                        if(file_extension == ".jpg" || file_extension == ".jpeg" || file_extension == ".png" || file_extension == ".tif" 
+                        || file_extension == ".tiff" || file_extension == ".gif"){
+
+                            file_list[i]->type = image_icon;
+
+                        }else if(file_extension == ".mp4" || file_extension == ".mov" || file_extension == ".mkv" || file_extension == ".avi" 
+                        || file_extension == ".webm"){
+
+                            file_list[i]->type = video_icon;
+
+                        }else if(file_extension == ".h" || file_extension == ".c" || file_extension == ".cpp" || file_extension == ".py" 
+                        || file_extension == ".java" || file_extension == ".js"){
+
+                            file_list[i]->type = video_icon;
+
+                        }else{
+
+                            file_list[i]->type = other_icon;
+
+                        }
+                            
+                        
+
+
+                    }
                     drawItem *toPush = new drawItem();
                     toPush->file_name_rect.x = 0;
                     toPush->file_name_rect.y = y;
