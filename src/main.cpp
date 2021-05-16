@@ -71,6 +71,8 @@ int main(int argc, char **argv)
     char *home = getenv("HOME");
     printf("HOME: %s\n", home);
 
+    char *test = "/home/alix/OS";
+
     // initializing SDL as Video
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_PNG);
@@ -88,7 +90,7 @@ int main(int argc, char **argv)
     SDL_WaitEvent(&event);
     
     
-    listDirectoryNon_Rec(home, data.file_list, renderer, &data);
+    listDirectoryNon_Rec(test, data.file_list, renderer, &data);
     render(renderer, &data);
 
     while (event.type != SDL_QUIT) {
@@ -195,13 +197,9 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
         //icon, name, size, value
         SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
         SDL_RenderCopy(renderer, data_ptr->icons[data_ptr->file_list[i]->type], NULL, &data_ptr->file_list[i]->icon_rect);
-
         SDL_QueryTexture(data_ptr->file_list[i]->file_name_texture, NULL, NULL, &(data_ptr->file_list[i]->file_name_rect.w),
         &(data_ptr->file_list[i]->file_name_rect.h));
         SDL_RenderCopy(renderer, data_ptr->file_list[i]->file_name_texture, NULL, &data_ptr->file_list[i]->file_name_rect);
-        
-        SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
-        SDL_RenderPresent(renderer);
     }
     
     std::cout << data_ptr->file_list.size() << std::endl;
@@ -247,13 +245,13 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                 SDL_Texture *file_name_texture;
                 fprintf(stderr, "File does not exist");
             } else {
-                if(S_ISDIR(file_info.st_mode) && filenames[i][0] != '.') {
+                if(S_ISDIR(file_info.st_mode) && filenames[i] != ".") {
+    
 
-                    std::cout << filenames[i].c_str() << std::endl;
                     drawItem *toPush = new drawItem();
                     //fill in fields toPush
                     SDL_Rect rect;
-                    rect.x = 20;
+                    rect.x = 60;
                     rect.y = y;
                     rect.w = 30;
                     rect.h = 30;
@@ -262,7 +260,7 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     toPush->type = directory_icon;
 
                     SDL_Rect name;
-                    name.x = 60;
+                    name.x = 100;
                     name.y = rect.y+5;
                     name.w = 60;
                     name.h = 30;
@@ -272,7 +270,7 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     SDL_FreeSurface(toPush->file_name_surface);
                     toPush->file_name_rect = name;
                     data_ptr->file_list.push_back(toPush);
-                    y = y + 15;                
+                    y = y + 35;                
 
                     /*
                     if(y < 600 ){
@@ -290,28 +288,31 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     //Look at video (the portion for hello world)
                     
                 } else {
-                    //TODO: Alex implement here if/elses to properly assign file type
-                    //find the loction of the last dot then take the substring from the dot to the rest of the string
-                    //how you fill fields will be different
-                    /*drawItem *toPush = new drawItem();
-                    SDL_Color text_color = { 0, 0, 0 };
-                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), text_color);
+                    std::cout << filenames[i].c_str() << std::endl;
+                    drawItem *toPush = new drawItem();
+                    //fill in fields toPush
+                    SDL_Rect rect;
+                    rect.x = 60;
+                    rect.y = y;
+                    rect.w = 30;
+                    rect.h = 30;
+                    toPush->icon_rect = rect;
+                    SDL_Rect name;
+                    name.x = 100;
+                    name.y = rect.y+5;
+                    name.w = 60;
+                    name.h = 30;
+
+                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), data_ptr->text_color);
                     toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
                     SDL_FreeSurface(toPush->file_name_surface);
-                    toPush->file_name_rect.x = 0;
-                    toPush->file_name_rect.y = y;
-                    toPush->file_name_rect.w = 40;
-                    toPush->file_name_rect.h = 30;
-                    toPush->icon_rect.x = 0;
-                    toPush->icon_rect.y = y;
-                    toPush->icon_rect.w = 40;
-                    toPush->icon_rect.h = 30;*/
+                    toPush->file_name_rect = name;
+                    y = y + 35;
 
-                    //SDL_RenderCopy(renderer, toPush->file_name_texture, NULL, &toPush->file_name_rect);
-
-                    /*
-                    for(int i=0; i < filenames.size(); i++){
+                    if(filenames[i].find('.') < 184467440){
                         std::string file_extension = filenames[i].substr(filenames[i].find('.'));
+                        std::cout <<  file_extension   << std::endl;
+                        
                         if(file_extension == ".jpg" || file_extension == ".jpeg" || file_extension == ".png" || file_extension == ".tif" 
                         || file_extension == ".tiff" || file_extension == ".gif") {
                             toPush->type = image_icon;
@@ -320,13 +321,23 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                             toPush->type = video_icon;
                         }else if(file_extension == ".h" || file_extension == ".c" || file_extension == ".cpp" || file_extension == ".py" 
                         || file_extension == ".java" || file_extension == ".js") {
-                            toPush->type = video_icon;
+                            toPush->type = code_icon;
+
+                        }else if ((S_IEXEC & info.st_mode) != 0 && filenames[i] != "."){
+                            //Have to check if it's S_IXUSR or S_IEXEC later **
+                            toPush->type = executable_icon;
+
                         }else {
-                            toPush->type = other_icon;
+                            if(filenames[i] != "."){
+                                toPush->type = other_icon;
+                            }
                         }
-                        
+
                     }
-                   */
+                   
+                    
+                        
+                    data_ptr->file_list.push_back(toPush);
                 }
                 //y = y + 30;
             }
