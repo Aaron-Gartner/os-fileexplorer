@@ -20,7 +20,7 @@ typedef struct drawItem {
     SDL_Rect file_name_rect;
     SDL_Surface *file_name_surface;
     SDL_Texture *file_name_texture;
-    icon_type type; 
+    icon_type type;
     SDL_Rect icon_rect; 
 } drawItem;
 
@@ -82,10 +82,13 @@ int main(int argc, char **argv)
     render(renderer, &data);
     SDL_Event event;
     SDL_WaitEvent(&event);
+    render(renderer, &data);
+    
+    
 
     while (event.type != SDL_QUIT) {
         //render(renderer);
-        listDirectoryNon_Rec(home, data.file_list, renderer, &data);
+        //listDirectoryNon_Rec(home, data.file_list, renderer, &data);
         SDL_WaitEvent(&event);
 
 
@@ -131,32 +134,34 @@ void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
     //Creates text
     SDL_Color text_color = { 0, 0, 0 };
     data_ptr->font = TTF_OpenFont("resrc/OpenSans-Regular.ttf", 14);
+    /*
     for (int i = 0; i < data_ptr->file_list.size(); i++) {
         data_ptr->file_list[i]->file_name_texture = SDL_CreateTextureFromSurface(renderer, data_ptr->file_list[i]->file_name_surface);
-    }
+        SDL_FreeSurface(data_ptr->file_list[i]->file_name_surface);
+    }*/
     
     
-    SDL_Surface *img_surf = IMG_Load("resrc/images/directory_icon.png");
+    SDL_Surface *img_surf = IMG_Load("resrc/directory_icon.png");
     data_ptr->icons[directory_icon] = SDL_CreateTextureFromSurface(renderer, img_surf);
     SDL_FreeSurface(img_surf);
     
-    SDL_Surface *img_surf2 = IMG_Load("resrc/images/code_icon.png");
+    SDL_Surface *img_surf2 = IMG_Load("resrc/code_icon.png");
     data_ptr->icons[code_icon] = SDL_CreateTextureFromSurface(renderer, img_surf2);
     SDL_FreeSurface(img_surf2);
 
-    SDL_Surface *img_surf3 = IMG_Load("resrc/images/other_icon.png");
+    SDL_Surface *img_surf3 = IMG_Load("resrc/other_icon.png");
     data_ptr->icons[other_icon] = SDL_CreateTextureFromSurface(renderer, img_surf3);
     SDL_FreeSurface(img_surf);
 
-    SDL_Surface *img_surf4 = IMG_Load("resrc/images/image_icon.png");
+    SDL_Surface *img_surf4 = IMG_Load("resrc/photo_icon.png");
     data_ptr->icons[image_icon] = SDL_CreateTextureFromSurface(renderer, img_surf4);
     SDL_FreeSurface(img_surf4);
 
-    SDL_Surface *img_surf5 = IMG_Load("resrc/images/video_icon.png");
+    SDL_Surface *img_surf5 = IMG_Load("resrc/video_icon.png");
     data_ptr->icons[video_icon] = SDL_CreateTextureFromSurface(renderer, img_surf5);
     SDL_FreeSurface(img_surf5);
 
-    SDL_Surface *img_surf6 = IMG_Load("resrc/images/executable_icon.png");
+    SDL_Surface *img_surf6 = IMG_Load("resrc/executable_icon.png");
     data_ptr->icons[executable_icon] = SDL_CreateTextureFromSurface(renderer, img_surf6);
     SDL_FreeSurface(img_surf6);
 
@@ -166,6 +171,7 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
     // erase renderer content
     SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
     SDL_RenderClear(renderer);
+<<<<<<< HEAD
     SDL_SetRenderDrawColor(renderer, 255, 0, 200, 255);
     data_ptr->scroll_button_up.x = 770;
     data_ptr->scroll_button_up.y = 0;
@@ -184,11 +190,42 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
     data_ptr->TurnRecursiveOn.h =60;
     SDL_RenderFillRect(renderer, &(data_ptr->TurnRecursiveOn));
 
+=======
+    /*
+>>>>>>> 8657c72109309c18c43dd94e3bcbe61ec68b04fc
     for(int i = 0; i < data_ptr->file_list.size(); i++) {
         //icon, name, size, value
        SDL_QueryTexture(data_ptr->file_list[i]->file_name_texture, NULL, NULL, &(data_ptr->file_list[i]->file_name_rect.w), &(data_ptr->file_list[i]->file_name_rect.h));
        SDL_RenderCopy(renderer, data_ptr->file_list[i]->file_name_texture, &(data_ptr->file_list[i]->file_name_rect), &(data_ptr->file_list[i]->icon_rect));
+<<<<<<< HEAD
     }
+=======
+    }*/
+
+    SDL_Rect rect;
+    rect.x = 20;
+    rect.y = 20;
+    rect.w = 50;
+    rect.h = 50;
+
+    SDL_RenderCopy(renderer, data_ptr->icons[executable_icon], NULL, &rect);
+
+    rect.y = 80;
+    SDL_RenderCopy(renderer, data_ptr->icons[video_icon], NULL, &rect);
+
+    rect.y = 140;
+    SDL_RenderCopy(renderer, data_ptr->icons[image_icon], NULL, &rect);
+
+    rect.y = 200;
+    SDL_RenderCopy(renderer, data_ptr->icons[other_icon], NULL, &rect);
+
+    rect.y = 260;
+    SDL_RenderCopy(renderer, data_ptr->icons[code_icon], NULL, &rect);
+
+    rect.y = 320;
+    SDL_RenderCopy(renderer, data_ptr->icons[directory_icon], NULL, &rect);
+
+>>>>>>> 8657c72109309c18c43dd94e3bcbe61ec68b04fc
     // show rendered frame
     SDL_RenderPresent(renderer);
 }
@@ -224,7 +261,8 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
         int y = 20;
         for(int i = 0; i < filenames.size(); i++) {
             err = stat((dirname + "/" + filenames[i]).c_str(), &file_info);
-            if (err) {
+            if (err) {SDL_Surface *file_name_surface;
+    SDL_Texture *file_name_texture;
                 fprintf(stderr, "File does not exist");
             } else {
                 if(S_ISDIR(file_info.st_mode)) {
@@ -261,7 +299,7 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     toPush->icon_rect.y = y;
                     toPush->icon_rect.w = 40;
                     toPush->icon_rect.h = 30;
-                    for(int i=0; i < file_list.size(); i++){
+                    for(int i=0; i < filenames.size(); i++){
 
                         std::string file_extension = filenames[i].substr(filenames[i].find('.'));
 
@@ -289,10 +327,12 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     }
                    
                     file_list.push_back(toPush);
+                    SDL_RenderCopy(renderer, data_ptr->icons[image_icon], NULL, &(toPush->file_name_rect));
                 }
                 y += 10;
             }
         }
+<<<<<<< HEAD
         closedir(dir);
     }
     else
@@ -395,6 +435,9 @@ void listDirectoryRecursive(std::string dirname, std::vector<drawItem*>& file_li
                 y += 10;
             }
         }
+=======
+        
+>>>>>>> 8657c72109309c18c43dd94e3bcbe61ec68b04fc
         closedir(dir);
     }
     else
