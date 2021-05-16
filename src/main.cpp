@@ -444,7 +444,7 @@ void listDirectoryRecursive(std::string dirname, std::vector<drawItem*>& file_li
 
                     }
                    
-                    file_list.push_back(toPush);
+                    
                 }
                 y += 10;
             }
