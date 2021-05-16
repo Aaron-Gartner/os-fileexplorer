@@ -17,11 +17,11 @@ enum icon_type {
 };
 
 typedef struct drawItem {
+    SDL_Rect icon_rect;
     SDL_Rect file_name_rect;
     SDL_Surface *file_name_surface;
     SDL_Texture *file_name_texture;
     icon_type type;
-    SDL_Rect icon_rect; 
 } drawItem;
 
 typedef struct AppData {
@@ -31,6 +31,8 @@ typedef struct AppData {
     //With the rendering of textures, Don't draw the ones above and below, if y value is on
     //screen render, otherwise don't render.
     TTF_Font *font;
+    SDL_Color text_color;
+    SDL_Rect file_name_rect;
     SDL_Texture *icons[6];
     std::vector<drawItem*> file_list;
     SDL_Rect scroll_button_up;
@@ -82,15 +84,15 @@ int main(int argc, char **argv)
     render(renderer, &data);
     SDL_Event event;
     SDL_WaitEvent(&event);
+    
+    
+    listDirectoryNon_Rec(home, data.file_list, renderer, &data);
     render(renderer, &data);
-    
-    
 
     while (event.type != SDL_QUIT) {
         //render(renderer);
         //listDirectoryNon_Rec(home, data.file_list, renderer, &data);
         SDL_WaitEvent(&event);
-
 
         switch (event.type) {
             //implement a button on the top and bottom not a scroll bar
@@ -115,7 +117,7 @@ int main(int argc, char **argv)
                 break;
         }
 
-        render(renderer, &data);
+        //render(renderer, &data);
     }
 
     // clean up
@@ -132,15 +134,10 @@ int main(int argc, char **argv)
 
 void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
     //Creates text
-    SDL_Color text_color = { 0, 0, 0 };
+    data_ptr->text_color = { 0, 0, 0 };
     data_ptr->font = TTF_OpenFont("resrc/OpenSans-Regular.ttf", 14);
-    /*
-    for (int i = 0; i < data_ptr->file_list.size(); i++) {
-        data_ptr->file_list[i]->file_name_texture = SDL_CreateTextureFromSurface(renderer, data_ptr->file_list[i]->file_name_surface);
-        SDL_FreeSurface(data_ptr->file_list[i]->file_name_surface);
-    }*/
-    
-    
+
+
     SDL_Surface *img_surf = IMG_Load("resrc/directory_icon.png");
     data_ptr->icons[directory_icon] = SDL_CreateTextureFromSurface(renderer, img_surf);
     SDL_FreeSurface(img_surf);
@@ -189,11 +186,25 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
     data_ptr->TurnRecursiveOn.h =60;
     SDL_RenderFillRect(renderer, &(data_ptr->TurnRecursiveOn));
 
+
+
+    
     for(int i = 0; i < data_ptr->file_list.size(); i++) {
         //icon, name, size, value
-       SDL_QueryTexture(data_ptr->file_list[i]->file_name_texture, NULL, NULL, &(data_ptr->file_list[i]->file_name_rect.w), &(data_ptr->file_list[i]->file_name_rect.h));
-       SDL_RenderCopy(renderer, data_ptr->file_list[i]->file_name_texture, &(data_ptr->file_list[i]->file_name_rect), &(data_ptr->file_list[i]->icon_rect));
+        SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
+        SDL_RenderCopy(renderer, data_ptr->icons[data_ptr->file_list[i]->type], NULL, &data_ptr->file_list[i]->icon_rect);
+
+        SDL_QueryTexture(data_ptr->file_list[i]->file_name_texture, NULL, NULL, &(data_ptr->file_list[i]->file_name_rect.w),
+        &(data_ptr->file_list[i]->file_name_rect.h));
+        SDL_RenderCopy(renderer, data_ptr->file_list[i]->file_name_texture, NULL, &data_ptr->file_list[i]->file_name_rect);
+        
+        SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
+        SDL_RenderPresent(renderer);
     }
+    
+    std::cout << data_ptr->file_list.size() << std::endl;
+
+
     // show rendered frame
     SDL_RenderPresent(renderer);
 }
@@ -214,6 +225,7 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
         SDL_DestroyTexture(file_list[i]->file_name_texture);
     }
     file_list.clear();
+
     struct stat info;
     int err = stat(dirname.c_str(), &info);
     if (err == 0 && S_ISDIR(info.st_mode)) {
@@ -226,35 +238,65 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
         std::sort(filenames.begin(), filenames.end());
         struct stat file_info;
         //Declared here to ensure items don't render on top of eachother
-        int y = 20;
+        int y = 30;
         for(int i = 0; i < filenames.size(); i++) {
             err = stat((dirname + "/" + filenames[i]).c_str(), &file_info);
             if (err) {SDL_Surface *file_name_surface;
-    SDL_Texture *file_name_texture;
+                SDL_Texture *file_name_texture;
                 fprintf(stderr, "File does not exist");
             } else {
-                if(S_ISDIR(file_info.st_mode)) {
+                if(S_ISDIR(file_info.st_mode) && filenames[i][0] != '.') {
+
+                    std::cout << filenames[i].c_str() << std::endl;
                     drawItem *toPush = new drawItem();
                     //fill in fields toPush
-                    toPush->file_name_rect.x = 0;
-                    toPush->file_name_rect.y = y;
-                    //TODO Question: what to set for file_name_text? 
-                    //Look at video (the portion for hello world)
-                    SDL_Color text_color = { 0, 0, 0 };
-                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), text_color);
+                    SDL_Rect rect;
+                    rect.x = 20;
+                    rect.y = y;
+                    rect.w = 30;
+                    rect.h = 30;
+                    toPush->icon_rect = rect;
+
+                    toPush->type = directory_icon;
+
+                    SDL_Rect name;
+                    name.x = 60;
+                    name.y = rect.y+5;
+                    name.w = 60;
+                    name.h = 30;
+
+                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), data_ptr->text_color);
                     toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
                     SDL_FreeSurface(toPush->file_name_surface);
-                    toPush->type = directory_icon; 
-                    toPush->icon_rect.x = 0;
-                    toPush->icon_rect.y = y;
-                    toPush->icon_rect.w = 40;
-                    toPush->icon_rect.h = 30;
-                    file_list.push_back(toPush);
+                    toPush->file_name_rect = name;
+
+                    data_ptr->file_list.push_back(toPush);
+
+                    
+                    y = y + 15;
+                    
+
+                    /*
+                    if(y < 600 ){
+                        SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
+                        SDL_RenderCopy(renderer, data_ptr->icons[directory_icon], NULL, &rect);
+                        SDL_QueryTexture(toPush->file_name_texture, NULL, NULL, &(name.w), &(name.h));
+                        SDL_RenderCopy(renderer, toPush->file_name_texture, NULL, &name);
+                        SDL_RenderPresent(renderer);
+
+                        y = y + 30;
+                        
+                    }*/
+
+
+                    //TODO Question: what to set for file_name_text? 
+                    //Look at video (the portion for hello world)
+                    
                 } else {
                     //TODO: Alex implement here if/elses to properly assign file type
                     //find the loction of the last dot then take the substring from the dot to the rest of the string
                     //how you fill fields will be different
-                    drawItem *toPush = new drawItem();
+                    /*drawItem *toPush = new drawItem();
                     SDL_Color text_color = { 0, 0, 0 };
                     toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), text_color);
                     toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
@@ -266,7 +308,13 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     toPush->icon_rect.x = 0;
                     toPush->icon_rect.y = y;
                     toPush->icon_rect.w = 40;
-                    toPush->icon_rect.h = 30;
+                    toPush->icon_rect.h = 30;*/
+
+                    //SDL_RenderCopy(renderer, toPush->file_name_texture, NULL, &toPush->file_name_rect);
+
+
+
+                    /*
                     for(int i=0; i < filenames.size(); i++){
 
                         std::string file_extension = filenames[i].substr(filenames[i].find('.'));
@@ -291,13 +339,12 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                             toPush->type = other_icon;
 
                         }
+                        
 
                     }
-                   
-                    file_list.push_back(toPush);
-                    SDL_RenderCopy(renderer, data_ptr->icons[image_icon], NULL, &(toPush->file_name_rect));
+                   */
                 }
-                y += 10;
+                //y = y + 30;
             }
         }
         closedir(dir);
