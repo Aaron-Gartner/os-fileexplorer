@@ -171,7 +171,6 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
     // erase renderer content
     SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
     SDL_RenderClear(renderer);
-<<<<<<< HEAD
     SDL_SetRenderDrawColor(renderer, 255, 0, 200, 255);
     data_ptr->scroll_button_up.x = 770;
     data_ptr->scroll_button_up.y = 0;
@@ -190,21 +189,11 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
     data_ptr->TurnRecursiveOn.h =60;
     SDL_RenderFillRect(renderer, &(data_ptr->TurnRecursiveOn));
 
-=======
-    /*
->>>>>>> 8657c72109309c18c43dd94e3bcbe61ec68b04fc
     for(int i = 0; i < data_ptr->file_list.size(); i++) {
         //icon, name, size, value
        SDL_QueryTexture(data_ptr->file_list[i]->file_name_texture, NULL, NULL, &(data_ptr->file_list[i]->file_name_rect.w), &(data_ptr->file_list[i]->file_name_rect.h));
        SDL_RenderCopy(renderer, data_ptr->file_list[i]->file_name_texture, &(data_ptr->file_list[i]->file_name_rect), &(data_ptr->file_list[i]->icon_rect));
-<<<<<<< HEAD
     }
-=======
-    }*/
-
-    
-
->>>>>>> 8657c72109309c18c43dd94e3bcbe61ec68b04fc
     // show rendered frame
     SDL_RenderPresent(renderer);
 }
@@ -311,7 +300,6 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                 y += 10;
             }
         }
-<<<<<<< HEAD
         closedir(dir);
     }
     else
@@ -414,9 +402,6 @@ void listDirectoryRecursive(std::string dirname, std::vector<drawItem*>& file_li
                 y += 10;
             }
         }
-=======
-        
->>>>>>> 8657c72109309c18c43dd94e3bcbe61ec68b04fc
         closedir(dir);
     }
     else
