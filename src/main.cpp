@@ -202,28 +202,7 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
 =======
     }*/
 
-    SDL_Rect rect;
-    rect.x = 20;
-    rect.y = 20;
-    rect.w = 50;
-    rect.h = 50;
-
-    SDL_RenderCopy(renderer, data_ptr->icons[executable_icon], NULL, &rect);
-
-    rect.y = 80;
-    SDL_RenderCopy(renderer, data_ptr->icons[video_icon], NULL, &rect);
-
-    rect.y = 140;
-    SDL_RenderCopy(renderer, data_ptr->icons[image_icon], NULL, &rect);
-
-    rect.y = 200;
-    SDL_RenderCopy(renderer, data_ptr->icons[other_icon], NULL, &rect);
-
-    rect.y = 260;
-    SDL_RenderCopy(renderer, data_ptr->icons[code_icon], NULL, &rect);
-
-    rect.y = 320;
-    SDL_RenderCopy(renderer, data_ptr->icons[directory_icon], NULL, &rect);
+    
 
 >>>>>>> 8657c72109309c18c43dd94e3bcbe61ec68b04fc
     // show rendered frame
