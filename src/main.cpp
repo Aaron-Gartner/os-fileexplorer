@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 
     // initializing SDL as Video
     SDL_Init(SDL_INIT_VIDEO);
-    IMG_Init(IMG_INIT_PNG);+
+    IMG_Init(IMG_INIT_PNG);
     TTF_Init();
     // create window and renderer
     SDL_Renderer *renderer;
@@ -74,32 +74,18 @@ int main(int argc, char **argv)
     render(renderer, &data);
     SDL_Event event;
     SDL_WaitEvent(&event);
+    render(renderer, &data);
+    
+    
 
     while (event.type != SDL_QUIT) {
         //render(renderer);
-        listDirectoryNon_Rec(home, data.file_list, renderer, &data);
+        //listDirectoryNon_Rec(home, data.file_list, renderer, &data);
         SDL_WaitEvent(&event);
 
 
         switch (event.type) {
-            case SDL_MOUSEMOTION:
-                //implement a button on the top and bottom not a scroll bar
-                /*
-                if (data.directory_icon_selected || data.directory_name_selected) {
-                    data.phrase_location.x =  event.motion.x - data.phrase_offset.x;
-                    data.phrase_location.y =  event.motion.y - data.phrase_offset.y;
-                } else if (data.executable_icon_selected || data.executable_name_selected) {
-
-                } else if (data.image_icon_selected || data.image_filename_selected) {
-
-                } else if (data.video_icon_selected || data.video_filename_selected) {
-
-                } else if (data.code_icon_selected || data.code_filename_selected) {
-
-                } else if (data.other_icon_selected || data.other_filename_selected) {
-
-                }*/
-                break;
+            //implement a button on the top and bottom not a scroll bar
             case SDL_MOUSEBUTTONDOWN:
                 /*
                 if (event.button.x >= data.directory_icon_location.x && data.directory_icon_location.x + data.directory_icon_location.w && event.button.x >= data.directory_icon_location.y && data.directory_icon_location.y + data.directory_icon_location.h) {
@@ -147,27 +133,27 @@ void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
     }*/
     
     
-    SDL_Surface *img_surf = IMG_Load("resrc/images/directory_icon.png");
+    SDL_Surface *img_surf = IMG_Load("resrc/directory_icon.png");
     data_ptr->icons[directory_icon] = SDL_CreateTextureFromSurface(renderer, img_surf);
     SDL_FreeSurface(img_surf);
     
-    SDL_Surface *img_surf2 = IMG_Load("resrc/images/code_icon.png");
+    SDL_Surface *img_surf2 = IMG_Load("resrc/code_icon.png");
     data_ptr->icons[code_icon] = SDL_CreateTextureFromSurface(renderer, img_surf2);
     SDL_FreeSurface(img_surf2);
 
-    SDL_Surface *img_surf3 = IMG_Load("resrc/images/other_icon.png");
+    SDL_Surface *img_surf3 = IMG_Load("resrc/other_icon.png");
     data_ptr->icons[other_icon] = SDL_CreateTextureFromSurface(renderer, img_surf3);
     SDL_FreeSurface(img_surf);
 
-    SDL_Surface *img_surf4 = IMG_Load("resrc/images/image_icon.png");
+    SDL_Surface *img_surf4 = IMG_Load("resrc/photo_icon.png");
     data_ptr->icons[image_icon] = SDL_CreateTextureFromSurface(renderer, img_surf4);
     SDL_FreeSurface(img_surf4);
 
-    SDL_Surface *img_surf5 = IMG_Load("resrc/images/video_icon.png");
+    SDL_Surface *img_surf5 = IMG_Load("resrc/video_icon.png");
     data_ptr->icons[video_icon] = SDL_CreateTextureFromSurface(renderer, img_surf5);
     SDL_FreeSurface(img_surf5);
 
-    SDL_Surface *img_surf6 = IMG_Load("resrc/images/executable_icon.png");
+    SDL_Surface *img_surf6 = IMG_Load("resrc/executable_icon.png");
     data_ptr->icons[executable_icon] = SDL_CreateTextureFromSurface(renderer, img_surf6);
     SDL_FreeSurface(img_surf6);
 
@@ -177,11 +163,35 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
     // erase renderer content
     SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
     SDL_RenderClear(renderer);
+    /*
     for(int i = 0; i < data_ptr->file_list.size(); i++) {
         //icon, name, size, value
-        SDL_QueryTexture(data_ptr->file_list[i]->file_name_texture, NULL, NULL, &(data_ptr->file_list[i]->file_name_rect.w), &(data_ptr->file_list[i]->file_name_rect.h));
-        SDL_RenderCopy(renderer, data_ptr->file_list[i]->file_name_texture, &(data_ptr->file_list[i]->file_name_rect), &(data_ptr->file_list[i]->icon_rect));
-    }
+       SDL_QueryTexture(data_ptr->file_list[i]->file_name_texture, NULL, NULL, &(data_ptr->file_list[i]->file_name_rect.w), &(data_ptr->file_list[i]->file_name_rect.h));
+       SDL_RenderCopy(renderer, data_ptr->file_list[i]->file_name_texture, &(data_ptr->file_list[i]->file_name_rect), &(data_ptr->file_list[i]->icon_rect));
+    }*/
+
+    SDL_Rect rect;
+    rect.x = 20;
+    rect.y = 20;
+    rect.w = 50;
+    rect.h = 50;
+
+    SDL_RenderCopy(renderer, data_ptr->icons[executable_icon], NULL, &rect);
+
+    rect.y = 80;
+    SDL_RenderCopy(renderer, data_ptr->icons[video_icon], NULL, &rect);
+
+    rect.y = 140;
+    SDL_RenderCopy(renderer, data_ptr->icons[image_icon], NULL, &rect);
+
+    rect.y = 200;
+    SDL_RenderCopy(renderer, data_ptr->icons[other_icon], NULL, &rect);
+
+    rect.y = 260;
+    SDL_RenderCopy(renderer, data_ptr->icons[code_icon], NULL, &rect);
+
+    rect.y = 320;
+    SDL_RenderCopy(renderer, data_ptr->icons[directory_icon], NULL, &rect);
 
     // show rendered frame
     SDL_RenderPresent(renderer);
@@ -194,6 +204,7 @@ void quit(AppData *data_ptr) {
     SDL_DestroyTexture(data_ptr->icons[image_icon]);
     SDL_DestroyTexture(data_ptr->icons[video_icon]);
     SDL_DestroyTexture(data_ptr->icons[executable_icon]);
+    //TODO Question: Do we need to destroy our text textures by using a for loop?
     TTF_CloseFont(data_ptr->font);
 }
 
@@ -201,8 +212,6 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
     for (int i = 0; i < file_list.size(); i++) {
         SDL_DestroyTexture(file_list[i]->file_name_texture);
     }
-
-    std::cout << dirname << std::endl;
     file_list.clear();
     struct stat info;
     int err = stat(dirname.c_str(), &info);
@@ -219,10 +228,11 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
         int y = 20;
         for(int i = 0; i < filenames.size(); i++) {
             err = stat((dirname + "/" + filenames[i]).c_str(), &file_info);
-            if (err) {
+            if (err) {SDL_Surface *file_name_surface;
+    SDL_Texture *file_name_texture;
                 fprintf(stderr, "File does not exist");
             } else {
-                if(S_ISDIR(file_info.st_mode)){
+                if(S_ISDIR(file_info.st_mode)) {
                     drawItem *toPush = new drawItem();
                     //fill in fields toPush
                     toPush->file_name_rect.x = 0;
@@ -231,8 +241,8 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     //Look at video (the portion for hello world)
                     SDL_Color text_color = { 0, 0, 0 };
                     toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), text_color);
-                    toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, data_ptr->file_list[i]->file_name_surface);
-                    SDL_FreeSurface(data_ptr->file_list[i]->file_name_surface);
+                    toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
+                    SDL_FreeSurface(toPush->file_name_surface);
                     toPush->type = directory_icon; 
                     toPush->icon_rect.x = 0;
                     toPush->icon_rect.y = y;
@@ -243,36 +253,11 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     //TODO: Alex implement here if/elses to properly assign file type
                     //find the loction of the last dot then take the substring from the dot to the rest of the string
                     //how you fill fields will be different
-                    for(int i=0; i < file_list.size(); i++){
-
-                        std::string file_extension = filenames[i].substr(filenames[i].find('.'));
-
-                        if(file_extension == ".jpg" || file_extension == ".jpeg" || file_extension == ".png" || file_extension == ".tif" 
-                        || file_extension == ".tiff" || file_extension == ".gif"){
-
-                            file_list[i]->type = image_icon;
-
-                        }else if(file_extension == ".mp4" || file_extension == ".mov" || file_extension == ".mkv" || file_extension == ".avi" 
-                        || file_extension == ".webm"){
-
-                            file_list[i]->type = video_icon;
-
-                        }else if(file_extension == ".h" || file_extension == ".c" || file_extension == ".cpp" || file_extension == ".py" 
-                        || file_extension == ".java" || file_extension == ".js"){
-
-                            file_list[i]->type = video_icon;
-
-                        }else{
-
-                            file_list[i]->type = other_icon;
-
-                        }
-                            
-                        
-
-
-                    }
                     drawItem *toPush = new drawItem();
+                    SDL_Color text_color = { 0, 0, 0 };
+                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), text_color);
+                    toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
+                    SDL_FreeSurface(toPush->file_name_surface);
                     toPush->file_name_rect.x = 0;
                     toPush->file_name_rect.y = y;
                     toPush->file_name_rect.w = 40;
@@ -281,12 +266,40 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     toPush->icon_rect.y = y;
                     toPush->icon_rect.w = 40;
                     toPush->icon_rect.h = 30;
-                    //fill in fields toPush
+                    for(int i=0; i < filenames.size(); i++){
+
+                        std::string file_extension = filenames[i].substr(filenames[i].find('.'));
+
+                        if(file_extension == ".jpg" || file_extension == ".jpeg" || file_extension == ".png" || file_extension == ".tif" 
+                        || file_extension == ".tiff" || file_extension == ".gif") {
+
+                            toPush->type = image_icon;
+
+                        }else if(file_extension == ".mp4" || file_extension == ".mov" || file_extension == ".mkv" || file_extension == ".avi" 
+                        || file_extension == ".webm") {
+
+                            toPush->type = video_icon;
+
+                        }else if(file_extension == ".h" || file_extension == ".c" || file_extension == ".cpp" || file_extension == ".py" 
+                        || file_extension == ".java" || file_extension == ".js") {
+
+                            toPush->type = video_icon;
+
+                        }else {
+
+                            toPush->type = other_icon;
+
+                        }
+
+                    }
+                   
                     file_list.push_back(toPush);
+                    SDL_RenderCopy(renderer, data_ptr->icons[image_icon], NULL, &(toPush->file_name_rect));
                 }
                 y += 10;
             }
         }
+        
         closedir(dir);
     }
     else
