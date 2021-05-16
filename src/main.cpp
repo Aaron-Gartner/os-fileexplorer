@@ -19,6 +19,8 @@ enum icon_type {
 typedef struct drawItem {
     SDL_Rect icon_rect;
     SDL_Rect file_name_rect;
+    SDL_Rect file_size;
+    SDL_Surface *file_name_size_surface;
     SDL_Surface *file_name_surface;
     SDL_Texture *file_name_texture;
     icon_type type;
@@ -169,21 +171,21 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
     SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 255, 0, 200, 255);
-    data_ptr->scroll_button_up.x = 770;
+    data_ptr->scroll_button_up.x = 0;
     data_ptr->scroll_button_up.y = 0;
-    data_ptr->scroll_button_up.w = 30;
+    data_ptr->scroll_button_up.w = 800;
     data_ptr->scroll_button_up.h = 30;
     SDL_RenderFillRect(renderer, &(data_ptr->scroll_button_up));
-    data_ptr->scroll_button_down.x = 770;
+    data_ptr->scroll_button_down.x = 0;
     data_ptr->scroll_button_down.y = 570;
-    data_ptr->scroll_button_down.w = 30;
+    data_ptr->scroll_button_down.w = 800;
     data_ptr->scroll_button_down.h = 30;
     SDL_RenderFillRect(renderer, &(data_ptr->scroll_button_down));
     SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
     data_ptr->TurnRecursiveOn.x = 0;
-    data_ptr->TurnRecursiveOn.y = 540;
+    data_ptr->TurnRecursiveOn.y = 250;
     data_ptr->TurnRecursiveOn.w =60;
-    data_ptr->TurnRecursiveOn.h =60;
+    data_ptr->TurnRecursiveOn.h =100;
     SDL_RenderFillRect(renderer, &(data_ptr->TurnRecursiveOn));
 
 
@@ -269,12 +271,8 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
                     SDL_FreeSurface(toPush->file_name_surface);
                     toPush->file_name_rect = name;
-
                     data_ptr->file_list.push_back(toPush);
-
-                    
-                    y = y + 15;
-                    
+                    y = y + 15;                
 
                     /*
                     if(y < 600 ){
@@ -283,7 +281,6 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                         SDL_QueryTexture(toPush->file_name_texture, NULL, NULL, &(name.w), &(name.h));
                         SDL_RenderCopy(renderer, toPush->file_name_texture, NULL, &name);
                         SDL_RenderPresent(renderer);
-
                         y = y + 30;
                         
                     }*/
@@ -312,35 +309,22 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
 
                     //SDL_RenderCopy(renderer, toPush->file_name_texture, NULL, &toPush->file_name_rect);
 
-
-
                     /*
                     for(int i=0; i < filenames.size(); i++){
-
                         std::string file_extension = filenames[i].substr(filenames[i].find('.'));
-
                         if(file_extension == ".jpg" || file_extension == ".jpeg" || file_extension == ".png" || file_extension == ".tif" 
                         || file_extension == ".tiff" || file_extension == ".gif") {
-
                             toPush->type = image_icon;
-
                         }else if(file_extension == ".mp4" || file_extension == ".mov" || file_extension == ".mkv" || file_extension == ".avi" 
                         || file_extension == ".webm") {
-
                             toPush->type = video_icon;
-
                         }else if(file_extension == ".h" || file_extension == ".c" || file_extension == ".cpp" || file_extension == ".py" 
                         || file_extension == ".java" || file_extension == ".js") {
-
                             toPush->type = video_icon;
-
                         }else {
-
                             toPush->type = other_icon;
-
                         }
                         
-
                     }
                    */
                 }
@@ -356,7 +340,7 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
 }
 
 
-
+/*
 void listDirectoryRecursive(std::string dirname, std::vector<drawItem*>& file_list, SDL_Renderer *renderer, AppData *data_ptr, int indent = 0) {
     for (int i = 0; i < file_list.size(); i++) {
         SDL_DestroyTexture(file_list[i]->file_name_texture);
@@ -392,9 +376,9 @@ void listDirectoryRecursive(std::string dirname, std::vector<drawItem*>& file_li
                     //TODO Question: what to set for file_name_text? 
                     //Look at video (the portion for hello world)
                     SDL_Color text_color = { 0, 0, 0 };
-                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), text_color);
-                    toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
-                    SDL_FreeSurface(toPush->file_name_surface);
+                    //toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), text_color);
+                    //toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
+                   // SDL_FreeSurface(toPush->file_name_surface);
                     toPush->type = directory_icon; 
                     toPush->icon_rect.x = 0;
                     toPush->icon_rect.y = y;
@@ -408,8 +392,8 @@ void listDirectoryRecursive(std::string dirname, std::vector<drawItem*>& file_li
                 } else {
                     drawItem *toPush = new drawItem();
                     SDL_Color text_color = { 0, 0, 0 };
-                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), text_color);
-                    toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
+                    //toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), text_color);
+                    //toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
                     SDL_FreeSurface(toPush->file_name_surface);
                     toPush->file_name_rect.x = 0;
                     toPush->file_name_rect.y = y;
@@ -456,4 +440,4 @@ void listDirectoryRecursive(std::string dirname, std::vector<drawItem*>& file_li
         fprintf(stderr, "Error: directory '%s' not found\n", dirname.c_str());
     }
 }
-
+*/
