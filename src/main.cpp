@@ -19,11 +19,16 @@ enum icon_type {
 typedef struct drawItem {
     SDL_Rect icon_rect;
     SDL_Rect file_name_rect;
-    SDL_Rect file_size;
-    SDL_Surface *file_name_size_surface;
+    SDL_Rect file_size_rect;
+    SDL_Rect file_permissions_rect;
     SDL_Surface *file_name_surface;
     SDL_Texture *file_name_texture;
+    SDL_Surface *file_size_surface;
+    SDL_Texture *file_size_texture;
+    SDL_Surface *file_permissions_surface;
+    SDL_Texture *file_permissions_texture;
     icon_type type;
+    std::string permissions;
 } drawItem;
 
 typedef struct AppData {
@@ -53,13 +58,20 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
 void initialize(SDL_Renderer *renderer, AppData *data_ptr);
 void render(SDL_Renderer *renderer, AppData *data_ptr);
 void quit(AppData *data_ptr);
+std::string file_permissions(struct stat *file_info);
+std::string sizeToString(double size);
+
+int n = 0;
+int y = 40;
+
+
 
 int main(int argc, char **argv)
 {
     char *home = getenv("HOME");
-    //printf("HOME: %s\n", home);
+    printf("HOME: %s\n", home);
 
-    //char *test = "/home/alix/OS";
+    char *test = "/home/alix/OS";
 
     // initializing SDL as Video
     SDL_Init(SDL_INIT_VIDEO);
@@ -80,20 +92,39 @@ int main(int argc, char **argv)
     listDirectoryNon_Rec(home, data.file_list, renderer, &data);
     render(renderer, &data);
 
+    
+
     while (event.type != SDL_QUIT) {
         //render(renderer);
         //listDirectoryNon_Rec(home, data.file_list, renderer, &data);
         SDL_WaitEvent(&event);
+        
 
         switch (event.type) {
             //implement a button on the top and bottom not a scroll bar
             case SDL_MOUSEBUTTONDOWN:
                 if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.scroll_button_up.x && event.button.x <= data.scroll_button_up.x + data.scroll_button_up.w && event.button.y >= data.scroll_button_up.y && event.button.y <= data.scroll_button_up.y + data.scroll_button_up.h) {
                     data.scroll_button_up_selected = true;
+                    if(n-1 >= 0){
+                        n = n-1;
+                    }                    
+                    listDirectoryNon_Rec(home, data.file_list, renderer, &data);
+                    render(renderer, &data);
                     //needs to be a decrement
                     printf("Scroll up check\n");
                 } else if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.scroll_button_down.x && event.button.x <= data.scroll_button_down.x + data.scroll_button_down.w && event.button.y >= data.scroll_button_down.y && event.button.y <= data.scroll_button_down.y + data.scroll_button_down.h) {
                     data.scroll_button_down_selected = true;
+
+                    n = n+1;
+                    listDirectoryNon_Rec(home, data.file_list, renderer, &data);
+                    if( data.file_list.size() >= 13){
+                        render(renderer, &data);
+                    }else{
+                        n = n-1;
+                    }
+                    
+                    
+                    std::cout << "n = " << n << " >> data.file_list.size() = " <<data.file_list.size() << std::endl;
                     //needs to be a increment
                     printf("Scroll down check\n");
                 } else if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.TurnRecursiveOn.x && event.button.x <= data.TurnRecursiveOn.x + data.TurnRecursiveOn.w && event.button.y >= data.TurnRecursiveOn.y && event.button.y <= data.TurnRecursiveOn.y + data.TurnRecursiveOn.h) {
@@ -207,10 +238,15 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
         SDL_QueryTexture(data_ptr->file_list[i]->file_name_texture, NULL, NULL, &(data_ptr->file_list[i]->file_name_rect.w),
         &(data_ptr->file_list[i]->file_name_rect.h));
         SDL_RenderCopy(renderer, data_ptr->file_list[i]->file_name_texture, NULL, &data_ptr->file_list[i]->file_name_rect);
-    }
-    
-    std::cout << data_ptr->file_list.size() << std::endl;
 
+        SDL_QueryTexture(data_ptr->file_list[i]->file_size_texture, NULL, NULL, &(data_ptr->file_list[i]->file_size_rect.w),
+        &(data_ptr->file_list[i]->file_size_rect.h));
+        SDL_RenderCopy(renderer, data_ptr->file_list[i]->file_size_texture, NULL, &data_ptr->file_list[i]->file_size_rect);
+
+        SDL_QueryTexture(data_ptr->file_list[i]->file_permissions_texture, NULL, NULL, &(data_ptr->file_list[i]->file_permissions_rect.w),
+        &(data_ptr->file_list[i]->file_permissions_rect.h));
+        SDL_RenderCopy(renderer, data_ptr->file_list[i]->file_permissions_texture, NULL, &data_ptr->file_list[i]->file_permissions_rect);
+    }
 
     // show rendered frame
     SDL_RenderPresent(renderer);
@@ -233,6 +269,8 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
     }
     file_list.clear();
 
+    y = 40;
+
     struct stat info;
     int err = stat(dirname.c_str(), &info);
     if (err == 0 && S_ISDIR(info.st_mode)) {
@@ -245,15 +283,16 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
         std::sort(filenames.begin(), filenames.end());
         struct stat file_info;
         //Declared here to ensure items don't render on top of eachother
-        int y = 30;
-        for(int i = 0; i < filenames.size(); i++) {
+        for(int i = n+1; i < filenames.size(); i++) {
+            if(y > 520){
+                break;
+            }
             err = stat((dirname + "/" + filenames[i]).c_str(), &file_info);
             if (err) {SDL_Surface *file_name_surface;
                 SDL_Texture *file_name_texture;
                 fprintf(stderr, "File does not exist");
             } else {
                 if(S_ISDIR(file_info.st_mode) && filenames[i] != ".") {
-    
 
                     drawItem *toPush = new drawItem();
                     //fill in fields toPush
@@ -276,22 +315,38 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
                     SDL_FreeSurface(toPush->file_name_surface);
                     toPush->file_name_rect = name;
-                    data_ptr->file_list.push_back(toPush);
-                    y = y + 35;                
+                    
+                    SDL_Rect size;
+                    size.x = 300;
+                    size.y = rect.y+5;
+                    size.w = 60;
+                    size.h = 30;
 
-                    /*
-                    if(y < 600 ){
-                        SDL_SetRenderDrawColor(renderer, 235, 235, 235, 255);
-                        SDL_RenderCopy(renderer, data_ptr->icons[directory_icon], NULL, &rect);
-                        SDL_QueryTexture(toPush->file_name_texture, NULL, NULL, &(name.w), &(name.h));
-                        SDL_RenderCopy(renderer, toPush->file_name_texture, NULL, &name);
-                        SDL_RenderPresent(renderer);
-                        y = y + 30;
-                        
-                    }*/
+                    toPush->file_size_surface  = TTF_RenderText_Solid(data_ptr->font, "directory", data_ptr->text_color);
+                    toPush->file_size_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_size_surface);
+                    SDL_FreeSurface(toPush->file_size_surface);
+                    toPush->file_size_rect = size;
+
+                    SDL_Rect permissions;
+                    permissions.x = 400;
+                    permissions.y = rect.y+5;
+                    permissions.w = 60;
+                    permissions.h = 30;
+
+                    std::string permission = file_permissions(&file_info);
+
+                    toPush->file_permissions_surface  = TTF_RenderText_Solid(data_ptr->font, permission.c_str(), data_ptr->text_color);
+                    toPush->file_permissions_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_permissions_surface);
+                    SDL_FreeSurface(toPush->file_permissions_surface);
+                    toPush->file_permissions_rect = permissions;
+
+
+                    data_ptr->file_list.push_back(toPush);
+                    y = y + 40;             
                     
                 } else {
-                    std::cout << filenames[i].c_str() << std::endl;
+
+                    
                     drawItem *toPush = new drawItem();
                     //fill in fields toPush
                     SDL_Rect rect;
@@ -310,45 +365,71 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
                     SDL_FreeSurface(toPush->file_name_surface);
                     toPush->file_name_rect = name;
-                    y = y + 35;
 
-                    if(filenames[i].find('.') < 184467440){
-                        std::string file_extension = filenames[i].substr(filenames[i].find('.'));
-                        std::cout <<  file_extension   << std::endl;
-                        
-                        if(file_extension == ".jpg" || file_extension == ".jpeg" || file_extension == ".png" || file_extension == ".tif" 
-                        || file_extension == ".tiff" || file_extension == ".gif") {
-                            toPush->type = image_icon;
-                            data_ptr->file_list.push_back(toPush);
-                        }else if(file_extension == ".mp4" || file_extension == ".mov" || file_extension == ".mkv" || file_extension == ".avi" 
-                        || file_extension == ".webm") {
-                            toPush->type = video_icon;
-                            data_ptr->file_list.push_back(toPush);
-                        }else if(file_extension == ".h" || file_extension == ".c" || file_extension == ".cpp" || file_extension == ".py" 
-                        || file_extension == ".java" || file_extension == ".js") {
-                            toPush->type = code_icon;
-                            data_ptr->file_list.push_back(toPush);
-                        }else if ((S_IEXEC & info.st_mode) != 0 && filenames[i] != "."){
-                            //Have to check if it's S_IXUSR or S_IEXEC later **
-                            toPush->type = executable_icon;
-                            data_ptr->file_list.push_back(toPush);
+                    SDL_Rect size;
+                    size.x = 300;
+                    size.y = rect.y+5;
+                    size.w = 60;
+                    size.h = 30;
 
-                        }else {
-                            if(filenames[i] != "."){
-                                toPush->type = other_icon;
-                                data_ptr->file_list.push_back(toPush);
-                            }
-                        }
+                    double size_int = file_info.st_size;
+                    toPush->file_size_surface  = TTF_RenderText_Solid(data_ptr->font, sizeToString(size_int).c_str(), data_ptr->text_color);
+                    toPush->file_size_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_size_surface);
+                    SDL_FreeSurface(toPush->file_size_surface);
+                    toPush->file_size_rect = size;
 
+                    SDL_Rect permissions;
+                    permissions.x = 400;
+                    permissions.y = rect.y+5;
+                    permissions.w = 60;
+                    permissions.h = 30;
+
+                    std::string permission = file_permissions(&file_info);
+
+                    toPush->file_permissions_surface  = TTF_RenderText_Solid(data_ptr->font, permission.c_str(), data_ptr->text_color);
+                    toPush->file_permissions_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_permissions_surface);
+                    SDL_FreeSurface(toPush->file_permissions_surface);
+                    toPush->file_permissions_rect = permissions;
+
+
+                    int find = filenames[i].find('.');
+                    if(find < 0){
+                        find = 0;
                     }
-                   
-                    
-                        
-                    
-                }
-                //y = y + 30;
-            }
-        }
+                    std::string file_extension = filenames[i].substr(find);
+                      
+                    if(file_extension == ".jpg" || file_extension == ".jpeg" || file_extension == ".png" || file_extension == ".tif" 
+                    || file_extension == ".tiff" || file_extension == ".gif") {
+
+                        toPush->type = image_icon;
+                        y = y + 40;
+                        data_ptr->file_list.push_back(toPush);
+                    }else if(file_extension == ".mp4" || file_extension == ".mov" || file_extension == ".mkv" || file_extension == ".avi" 
+                    || file_extension == ".webm") {
+                        toPush->type = video_icon;
+                        y = y + 40;
+                        data_ptr->file_list.push_back(toPush);
+                    }else if(file_extension == ".h" || file_extension == ".c" || file_extension == ".cpp" || file_extension == ".py" 
+                    || file_extension == ".java" || file_extension == ".js") {
+                        toPush->type = code_icon;
+                        y = y + 40;
+                        data_ptr->file_list.push_back(toPush);
+                    }else if ((S_IEXEC & file_info.st_mode) != 0 && filenames[i] != "."){
+                        //Have to check if it's S_IXUSR or S_IEXEC later **
+                        toPush->type = executable_icon;
+                        y = y + 40;
+                        data_ptr->file_list.push_back(toPush);
+                    }else {
+                        if(filenames[i] != "."){
+                            toPush->type = other_icon;
+                            y = y + 40;
+                            data_ptr->file_list.push_back(toPush);
+                        }
+                    }
+
+                }// end of else statement (not a directory)
+            }// end of else statement (File exists)
+        }//end of for loop
         closedir(dir);
     }
     else
@@ -357,105 +438,97 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
     }   
 }
 
-
-/*
-void listDirectoryRecursive(std::string dirname, std::vector<drawItem*>& file_list, SDL_Renderer *renderer, AppData *data_ptr, int indent = 0) {
-    for (int i = 0; i < file_list.size(); i++) {
-        SDL_DestroyTexture(file_list[i]->file_name_texture);
+std::string file_permissions(struct stat *file_info)
+{
+    
+    std::string permissions = "";
+    //if file is a directory
+    if(S_ISDIR(file_info->st_mode)){
+        permissions = permissions + "d";
+    }else{
+        permissions = permissions + "-";
     }
-    file_list.clear();
-    std::string space = "";
-    for (int i = 0; i < indent; i++) {
-        space += " ";
+
+    //File owner has read permission
+    if(S_IRUSR & file_info->st_mode){
+        permissions = permissions + "r";
+    }else{
+        permissions = permissions + "-";
     }
-    struct stat info;
-    int err = stat(dirname.c_str(), &info);
-    if (err == 0 && S_ISDIR(info.st_mode)) {
-        DIR* dir = opendir(dirname.c_str());
-        std::vector<std::string> filenames;
-        struct dirent* entry;
-        while ((entry = readdir(dir)) != NULL) {
-            filenames.push_back(entry->d_name);
-        }
-        std::sort(filenames.begin(), filenames.end());
-        struct stat file_info;
-        //Declared here to ensure items don't render on top of eachother
-        int y = 20;
-        for(int i = 0; i < filenames.size(); i++) {
-            err = stat((dirname + "/" + filenames[i]).c_str(), &file_info);
-            if (err) {
-                fprintf(stderr, "File does not exist");
-            } else {
-                if(S_ISDIR(file_info.st_mode)) {
-                    drawItem *toPush = new drawItem();
-                    //fill in fields toPush
-                    toPush->file_name_rect.x = 0;
-                    toPush->file_name_rect.y = y;
-                    //TODO Question: what to set for file_name_text? 
-                    //Look at video (the portion for hello world)
-                    SDL_Color text_color = { 0, 0, 0 };
-                    //toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), text_color);
-                    //toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
-                   // SDL_FreeSurface(toPush->file_name_surface);
-                    toPush->type = directory_icon; 
-                    toPush->icon_rect.x = 0;
-                    toPush->icon_rect.y = y;
-                    toPush->icon_rect.w = 40;
-                    toPush->icon_rect.h = 30;
-                    file_list.push_back(toPush);
-                    //One line of code to 
-                    if (filenames[i] != "." && filenames[i] != "..") {
-                         listDirectoryRecursive((dirname + "/" + filenames[i]), data_ptr->file_list, renderer, data_ptr, (indent+1));
-                    }       
-                } else {
-                    drawItem *toPush = new drawItem();
-                    SDL_Color text_color = { 0, 0, 0 };
-                    //toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), text_color);
-                    //toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
-                    SDL_FreeSurface(toPush->file_name_surface);
-                    toPush->file_name_rect.x = 0;
-                    toPush->file_name_rect.y = y;
-                    toPush->file_name_rect.w = 40;
-                    toPush->file_name_rect.h = 30;
-                    toPush->icon_rect.x = 0;
-                    toPush->icon_rect.y = y;
-                    toPush->icon_rect.w = 40;
-                    toPush->icon_rect.h = 30;
-                    for(int i=0; i < file_list.size(); i++){
-                        std::string file_extension = filenames[i].substr(filenames[i].find('.'));
-                        if(file_extension == ".jpg" || file_extension == ".jpeg" || file_extension == ".png" || file_extension == ".tif" 
-                        || file_extension == ".tiff" || file_extension == ".gif") {
-
-                            toPush->type = image_icon;
-
-                        }else if(file_extension == ".mp4" || file_extension == ".mov" || file_extension == ".mkv" || file_extension == ".avi" 
-                        || file_extension == ".webm") {
-
-                            toPush->type = video_icon;
-
-                        }else if(file_extension == ".h" || file_extension == ".c" || file_extension == ".cpp" || file_extension == ".py" 
-                        || file_extension == ".java" || file_extension == ".js") {
-
-                            toPush->type = video_icon;
-
-                        }else {
-
-                            toPush->type = other_icon;
-
-                        }
-
-                    }
-                   
-                    
-                }
-                y += 10;
-            }
-        }
-        closedir(dir);
+    //File owner has write permission
+    if(S_IWUSR & file_info->st_mode){
+        permissions = permissions + "w";
+    }else{
+        permissions = permissions + "-";
     }
-    else
-    {
-        fprintf(stderr, "Error: directory '%s' not found\n", dirname.c_str());
+    //File owner has execute/search permission
+    if(S_IXUSR & file_info->st_mode){
+        permissions = permissions + "x";
+    }else{
+        permissions = permissions + "-";
     }
+
+    //The file's user group has read permission
+    if(S_IRGRP & file_info->st_mode){
+        permissions = permissions + "r";
+    }else{
+        permissions = permissions + "-";
+    }
+    //The file's user group has write permission
+    if(S_IWGRP & file_info->st_mode){
+        permissions = permissions + "w";
+    }else{
+        permissions = permissions + "-";
+    }
+    //The file's user group has execute/search permission
+    if(S_IXGRP & file_info->st_mode){
+        permissions = permissions + "x";
+    }else{
+        permissions = permissions + "-";
+    }
+
+    //Other users have read permission
+    if(S_IROTH & file_info->st_mode){
+        permissions = permissions + "r";
+    }else{
+        permissions = permissions + "-";
+    }
+    //Other users have write permission
+    if(S_IWOTH & file_info->st_mode){
+        permissions = permissions + "w";
+    }else{
+        permissions = permissions + "-";
+    }
+    //Other users have execute/search permission
+    if(S_IXOTH & file_info->st_mode){
+        permissions = permissions + "x";
+    }else{
+        permissions = permissions + "-";
+    }
+
+    return permissions;
 }
-*/
+
+std::string sizeToString(double size){
+
+    //Gb
+    if(size >= 1073741824){
+        std::string size_string = std::to_string(size/1073741824);
+        std::string rounded = size_string.substr(0, size_string.find(".")+2) + " GiB";
+        return rounded;
+    }else if(size >= 1048576){
+        std::string size_string = std::to_string(size/1048576);
+        std::string rounded = size_string.substr(0, size_string.find(".")+2) + " MiB";
+        return rounded;
+    }else if(size >= 1024){
+        std::string size_string = std::to_string(size/1024);
+        std::string rounded = size_string.substr(0, size_string.find(".")+2) + " kiB";
+        return rounded;
+    }else{
+        std::string size_string = std::to_string(size) + "B";
+        std::string rounded = size_string.substr(0, size_string.find(".")) + " B";
+        return rounded;
+    }
+
+}
+
