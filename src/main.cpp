@@ -110,8 +110,6 @@ int main(int argc, char **argv)
                     }                    
                     listDirectoryNon_Rec(home, data.file_list, renderer, &data);
                     render(renderer, &data);
-                    //needs to be a decrement
-                    printf("Scroll up check\n");
                 } else if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.scroll_button_down.x && event.button.x <= data.scroll_button_down.x + data.scroll_button_down.w && event.button.y >= data.scroll_button_down.y && event.button.y <= data.scroll_button_down.y + data.scroll_button_down.h) {
                     data.scroll_button_down_selected = true;
 
@@ -122,16 +120,10 @@ int main(int argc, char **argv)
                     }else{
                         n = n-1;
                     }
-                    
-                    
-                    std::cout << "n = " << n << " >> data.file_list.size() = " <<data.file_list.size() << std::endl;
-                    //needs to be a increment
-                    printf("Scroll down check\n");
                 } else if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.TurnRecursiveOn.x && event.button.x <= data.TurnRecursiveOn.x + data.TurnRecursiveOn.w && event.button.y >= data.TurnRecursiveOn.y && event.button.y <= data.TurnRecursiveOn.y + data.TurnRecursiveOn.h) {
                     data.TurnRecursiveOn_selected = true;
                     printf("Recursive check\n");
                     if (data.recursive_turned_on) {
-
                         data.recursive_turned_on = false;
                     } else {
                         data.recursive_turned_on = true;
@@ -190,7 +182,7 @@ void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
 
     SDL_Surface *img_surf3 = IMG_Load("resrc/other_icon.png");
     data_ptr->icons[other_icon] = SDL_CreateTextureFromSurface(renderer, img_surf3);
-    SDL_FreeSurface(img_surf);
+    SDL_FreeSurface(img_surf3);
 
     SDL_Surface *img_surf4 = IMG_Load("resrc/photo_icon.png");
     data_ptr->icons[image_icon] = SDL_CreateTextureFromSurface(renderer, img_surf4);
