@@ -10,6 +10,8 @@
 #include <SDL_ttf.h>
 #include <unistd.h>
 
+//gnome-terminal -x bash -c "../ls
+
 #define WIDTH 800
 #define HEIGHT 600
 
@@ -64,6 +66,7 @@ void quit(AppData *data_ptr);
 std::string file_permissions(struct stat *file_info);
 std::string sizeToString(double size);
 void open_file(std::string name);
+void open_exec(std::string name);
 
 int n = 0;
 int y = 40;
@@ -112,18 +115,31 @@ int main(int argc, char **argv)
                     if(n-1 >= 0){
                         n = n-1;
                     }
-                    listDirectoryNon_Rec(home, data.file_list, renderer, &data);
-                    render(renderer, &data);
+                    if(data.recursive_turned_on){
+                        listDirectoryRecursive(home, data.file_list, renderer, &data, 0);
+                        render(renderer, &data);
+                    }else{
+                        listDirectoryNon_Rec(home, data.file_list, renderer, &data);
+                        render(renderer, &data);
+                    }
                 } else if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.scroll_button_down.x && event.button.x <= data.scroll_button_down.x + data.scroll_button_down.w && event.button.y >= data.scroll_button_down.y && event.button.y <= data.scroll_button_down.y + data.scroll_button_down.h) {
                     data.scroll_button_down_selected = true;
                     
                     n = n+1;
-                    listDirectoryNon_Rec(home, data.file_list, renderer, &data);
+                    if(data.recursive_turned_on){
+                        listDirectoryRecursive(home, data.file_list, renderer, &data, 0);
+                    }else{
+                        listDirectoryNon_Rec(home, data.file_list, renderer, &data);
+                    }
                     if( data.file_list.size() >= 13){
                         render(renderer, &data);
                     }else{
                         n = n-1;
-                        listDirectoryNon_Rec(home, data.file_list, renderer, &data);
+                        if(data.recursive_turned_on){
+                            listDirectoryRecursive(home, data.file_list, renderer, &data, 0);
+                        }else{
+                            listDirectoryNon_Rec(home, data.file_list, renderer, &data);
+                        }
                         render(renderer, &data);
                     }
                 } else if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.TurnRecursiveOn.x && event.button.x <= data.TurnRecursiveOn.x + data.TurnRecursiveOn.w && event.button.y >= data.TurnRecursiveOn.y && event.button.y <= data.TurnRecursiveOn.y + data.TurnRecursiveOn.h) {
@@ -131,9 +147,11 @@ int main(int argc, char **argv)
                     printf("Recursive check\n");
                     if (data.recursive_turned_on) {
                         data.recursive_turned_on = false;
+                        listDirectoryNon_Rec(home, data.file_list, renderer, &data);
                         render(renderer, &data);
                     } else {
                         data.recursive_turned_on = true;
+                        listDirectoryRecursive(home, data.file_list, renderer, &data, 0);
                         render(renderer, &data);
                     }
                 } else {
@@ -164,32 +182,34 @@ int main(int argc, char **argv)
                                     
                                 } else {
 
+                                    if(data.file_list[i]->fileNameAsString == ".."){
+                                        if(data.file_list[i]->filePath != "/home"){
+                                            int index = data.file_list[i]->filePath.find_last_of('/');
+                                            std::string newPath = data.file_list[i]->filePath.substr(0, index);
+                                            strcpy(home, newPath.c_str());
+                                            n=0;
+                                            listDirectoryRecursive(newPath, data.file_list, renderer, &data, 0);
+                                            render(renderer, &data);
+                                        }
+                                    }else{
+                                        std::string newPath = data.file_list[i]->filePath + "/" + data.file_list[i]->fileNameAsString;
+                                        strcpy(home, newPath.c_str());
+                                        n=0;
+                                        listDirectoryRecursive(newPath, data.file_list, renderer, &data, 0);
+                                        render(renderer, &data);
+                                    }
+
 
                                 }
                             } else if (data.file_list[i]->type == executable_icon) {
+                                std::string newPath = "../" + data.file_list[i]->fileNameAsString;
+                                open_exec(newPath);
+                                //gnome-terminal -- bash -c "../ls; exec bash"
+
+                            } else {
                                 std::string newPath = data.file_list[i]->filePath + "/" + data.file_list[i]->fileNameAsString;
-                                std::cout << "file to open full path + name" << newPath.c_str() << std::endl;
-                                open_file(newPath);
-                                //TODO Question: do we have to register a handler for this type of files?
-                            } else if (data.file_list[i]->type == code_icon) {
-                                std::string newPath = data.file_list[i]->filePath + "/" + data.file_list[i]->fileNameAsString;
-                                std::cout << "file to open full path + name" << newPath.c_str() << std::endl;
-                                open_file(newPath);
-                            } else if (data.file_list[i]->type == image_icon) {
-                                std::string newPath = data.file_list[i]->filePath + "/" + data.file_list[i]->fileNameAsString;
-                                std::cout << "file to open full path + name" << newPath.c_str() << std::endl;
-                                open_file(newPath);
-                                
-                            } else if (data.file_list[i]->type == video_icon) {
-                                std::string newPath = data.file_list[i]->filePath + "/" + data.file_list[i]->fileNameAsString;
-                                std::cout << "file to open full path + name" << newPath.c_str() << std::endl;
-                                open_file(newPath);
-                                
-                            } else if (data.file_list[i]->type == other_icon) {
-                                //TODO Question: not sure what should go there?
-                                
+                                open_file(newPath);  
                             }
-                            printf("The icon selected is type: %d\n", data.file_list[i]->type);
                             break;
                         } 
                     }
@@ -281,10 +301,6 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
         data_ptr->TurnRecursiveOn.h =100;
         SDL_RenderFillRect(renderer, &(data_ptr->TurnRecursiveOn));
     }
-    
-
-
-
     
     for(int i = 0; i < data_ptr->file_list.size(); i++) {
         //icon, name, size, value
@@ -509,6 +525,206 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
     }   
 }
 
+
+
+void listDirectoryRecursive(std::string dirname, std::vector<drawItem*>& file_list, SDL_Renderer *renderer, AppData *data_ptr, int indent){
+    for (int i = 0; i < file_list.size(); i++) {
+        SDL_DestroyTexture(file_list[i]->file_name_texture);
+    }
+    file_list.clear();
+    y = 40;
+    struct stat info;
+    int err = stat(dirname.c_str(), &info);
+    if (err == 0 && S_ISDIR(info.st_mode)) {
+        DIR* dir = opendir(dirname.c_str());
+        std::vector<std::string> filenames;
+        struct dirent* entry;
+        while ((entry = readdir(dir)) != NULL) {
+            filenames.push_back(entry->d_name);
+        }
+        std::sort(filenames.begin(), filenames.end());
+        struct stat file_info;
+        //Declared here to ensure items don't render on top of eachother
+        for(int i = n+1; i < filenames.size(); i++) {
+            if(y > 520){
+                break;
+            }
+            err = stat((dirname + "/" + filenames[i]).c_str(), &file_info);
+            if (err) {SDL_Surface *file_name_surface;
+                SDL_Texture *file_name_texture;
+                fprintf(stderr, "File does not exist");
+            } else {
+                if(S_ISDIR(file_info.st_mode) && filenames[i] != ".") {
+
+                    drawItem *toPush = new drawItem();
+                    //fill in fields toPush
+                    indent = indent * 30;
+                    SDL_Rect rect;
+                    rect.x = 60 + indent;
+                    rect.y = y ;
+                    rect.w = 30;
+                    rect.h = 30;
+                    toPush->icon_rect = rect;
+
+                    toPush->type = directory_icon;
+
+                    SDL_Rect name;
+                    name.x = 100 + indent;
+                    name.y = rect.y+5;
+                    name.w = 60;
+                    name.h = 30;
+
+                    toPush->fileNameAsString = filenames[i].c_str();
+                    toPush->filePath = dirname.c_str();
+                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), data_ptr->text_color);
+                    toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
+                    SDL_FreeSurface(toPush->file_name_surface);
+                    toPush->file_name_rect = name;
+                    
+                    SDL_Rect size;
+                    size.x = 300 + indent;
+                    size.y = rect.y+5;
+                    size.w = 60;
+                    size.h = 30;
+
+                    toPush->file_size_surface  = TTF_RenderText_Solid(data_ptr->font, "directory", data_ptr->text_color);
+                    toPush->file_size_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_size_surface);
+                    SDL_FreeSurface(toPush->file_size_surface);
+                    toPush->file_size_rect = size;
+
+                    SDL_Rect permissions;
+                    permissions.x = 400 + indent;
+                    permissions.y = rect.y+5;
+                    permissions.w = 60;
+                    permissions.h = 30;
+
+                    std::string permission = file_permissions(&file_info);
+
+                    toPush->file_permissions_surface  = TTF_RenderText_Solid(data_ptr->font, permission.c_str(), data_ptr->text_color);
+                    toPush->file_permissions_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_permissions_surface);
+                    SDL_FreeSurface(toPush->file_permissions_surface);
+                    toPush->file_permissions_rect = permissions;                    
+
+                    y = y + 40;
+                    data_ptr->file_list.push_back(toPush);
+                     
+                    if (filenames[i] != "." && filenames[i] != "..") {
+                        listDirectoryNon_Rec(dirname, data_ptr->file_list, renderer, data_ptr);
+                        y = y + 40;
+                        listDirectoryRecursive((dirname + "/" + filenames[i]), data_ptr->file_list, renderer, data_ptr, indent+=1);
+                    }
+                    
+                   
+                    
+                } else {
+
+                    
+                    drawItem *toPush = new drawItem();
+                    //fill in fields toPush
+                    indent = indent * 30;
+                    int indent_y = 0;
+                    SDL_Rect rect;
+                    rect.x = 60 + indent;
+                    rect.y = y + indent;
+                    rect.w = 30;
+                    rect.h = 30;
+                    toPush->icon_rect = rect;
+                    SDL_Rect name;
+                    name.x = 100 + indent;
+                    name.y = rect.y+5;
+                    name.w = 60;
+                    name.h = 30;
+
+                    std::string permission = file_permissions(&file_info);
+
+                    std::string tempString = filenames[i].c_str();
+                    if(tempString.size() > 20){
+                        tempString = tempString.substr(0, 20) + "...";
+                        toPush->fileNameAsString = tempString;
+                    }else{
+                        toPush->fileNameAsString = filenames[i].c_str();
+                        toPush->filePath = dirname.c_str();
+                    }
+
+                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, tempString.c_str(), data_ptr->text_color);
+                    toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
+                    SDL_FreeSurface(toPush->file_name_surface);
+                    toPush->file_name_rect = name;
+
+                    SDL_Rect size;
+                    size.x = 300 + indent;
+                    size.y = rect.y+5;
+                    size.w = 60;
+                    size.h = 30;
+
+                    double size_int = file_info.st_size;
+                    toPush->file_size_surface  = TTF_RenderText_Solid(data_ptr->font, sizeToString(size_int).c_str(), data_ptr->text_color);
+                    toPush->file_size_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_size_surface);
+                    SDL_FreeSurface(toPush->file_size_surface);
+                    toPush->file_size_rect = size;
+
+                    SDL_Rect permissions;
+                    permissions.x = 400 + indent;
+                    permissions.y = rect.y+5;
+                    permissions.w = 60;
+                    permissions.h = 30;
+
+                    
+                    
+
+                    toPush->file_permissions_surface  = TTF_RenderText_Solid(data_ptr->font, permission.c_str(), data_ptr->text_color);
+                    toPush->file_permissions_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_permissions_surface);
+                    SDL_FreeSurface(toPush->file_permissions_surface);
+                    toPush->file_permissions_rect = permissions;
+
+
+                    int find = filenames[i].find('.');
+                    if(find < 0){
+                        find = 0;
+                    }
+                    std::string file_extension = filenames[i].substr(find);
+                      
+                    if(file_extension == ".jpg" || file_extension == ".jpeg" || file_extension == ".png" || file_extension == ".tif" 
+                    || file_extension == ".tiff" || file_extension == ".gif") {
+
+                        toPush->type = image_icon;
+                        y = y + 40;
+                        data_ptr->file_list.push_back(toPush);
+                    }else if(file_extension == ".mp4" || file_extension == ".mov" || file_extension == ".mkv" || file_extension == ".avi" 
+                    || file_extension == ".webm") {
+                        toPush->type = video_icon;
+                        y = y + 40;
+                        data_ptr->file_list.push_back(toPush);
+                    }else if(file_extension == ".h" || file_extension == ".c" || file_extension == ".cpp" || file_extension == ".py" 
+                    || file_extension == ".java" || file_extension == ".js") {
+                        toPush->type = code_icon;
+                        y = y + 40;
+                        data_ptr->file_list.push_back(toPush);
+                    }else if ((S_IEXEC & file_info.st_mode) != 0 && filenames[i] != "."){
+                        //Have to check if it's S_IXUSR or S_IEXEC later **
+                        toPush->type = executable_icon;
+                        y = y + 40;
+                        data_ptr->file_list.push_back(toPush);
+                    }else {
+                        if(filenames[i] != "."){
+                            toPush->type = other_icon;
+                            y = y + 40;
+                            data_ptr->file_list.push_back(toPush);
+                        }
+                    }
+
+                }// end of else statement (not a directory)
+            }// end of else statement (File exists)
+        }//end of for loop
+        closedir(dir);
+    }
+    else
+    {
+        fprintf(stderr, "Error: directory '%s' not found\n", dirname.c_str());
+    }   
+}
+
+
 std::string file_permissions(struct stat *file_info)
 {
     
@@ -603,6 +819,10 @@ std::string sizeToString(double size){
 
 }
 
+
+
+
+
 void open_file(std::string name){
     int pid = fork();
     if (pid == 0) {
@@ -610,183 +830,11 @@ void open_file(std::string name){
     }
 }
 
-void listDirectoryRecursive(std::string dirname, std::vector<drawItem*>& file_list, SDL_Renderer *renderer, AppData *data_ptr, int indent = 0) {
-    for (int i = 0; i < file_list.size(); i++) {
-        SDL_DestroyTexture(file_list[i]->file_name_texture);
+void open_exec(std::string name){
+    int pid = fork();
+    //gnome-terminal -x bash -c "../ls"
+
+    if (pid == 0) {
+        execl("/usr/bin/gnome-terminal", "gnome-terminal", "--",  "bash", "-c", (name + "; exec bash").c_str(), NULL);
     }
-    file_list.clear();
-    y = 40;
-    int indent_to_x = 0;
-    for (int i = 0; i < indent; i++) {
-        indent_to_x += 30;
-    }
-    struct stat info;
-    int err = stat(dirname.c_str(), &info);
-    if (err == 0 && S_ISDIR(info.st_mode)) {
-        DIR* dir = opendir(dirname.c_str());
-        std::vector<std::string> filenames;
-        struct dirent* entry;
-        while ((entry = readdir(dir)) != NULL) {
-            filenames.push_back(entry->d_name);
-        }
-        std::sort(filenames.begin(), filenames.end());
-        struct stat file_info;
-        //Declared here to ensure items don't render on top of eachother
-        for(int i = n+1; i < filenames.size(); i++) {
-            if(y > 520){
-                break;
-            }
-            err = stat((dirname + "/" + filenames[i]).c_str(), &file_info);
-            if (err) {SDL_Surface *file_name_surface;
-                SDL_Texture *file_name_texture;
-                fprintf(stderr, "File does not exist");
-            } else {
-                if(S_ISDIR(file_info.st_mode) && filenames[i] != ".") {
-
-                    drawItem *toPush = new drawItem();
-                    //fill in fields toPush
-                    SDL_Rect rect;
-                    rect.x = 60+indent_to_x;
-                    rect.y = y;
-                    rect.w = 30;
-                    rect.h = 30;
-                    toPush->icon_rect = rect;
-
-                    toPush->type = directory_icon;
-
-                    SDL_Rect name;
-                    name.x = 100+indent_to_x;
-                    name.y = rect.y+5;
-                    name.w = 60;
-                    name.h = 30;
-
-                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), data_ptr->text_color);
-                    toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
-                    SDL_FreeSurface(toPush->file_name_surface);
-                    toPush->file_name_rect = name;
-                    
-                    SDL_Rect size;
-                    size.x = 300+indent_to_x;
-                    size.y = rect.y+5;
-                    size.w = 60;
-                    size.h = 30;
-
-                    toPush->file_size_surface  = TTF_RenderText_Solid(data_ptr->font, "directory", data_ptr->text_color);
-                    toPush->file_size_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_size_surface);
-                    SDL_FreeSurface(toPush->file_size_surface);
-                    toPush->file_size_rect = size;
-
-                    SDL_Rect permissions;
-                    permissions.x = 400+indent_to_x;
-                    permissions.y = rect.y+5;
-                    permissions.w = 60;
-                    permissions.h = 30;
-
-                    std::string permission = file_permissions(&file_info);
-
-                    toPush->file_permissions_surface  = TTF_RenderText_Solid(data_ptr->font, permission.c_str(), data_ptr->text_color);
-                    toPush->file_permissions_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_permissions_surface);
-                    SDL_FreeSurface(toPush->file_permissions_surface);
-                    toPush->file_permissions_rect = permissions;
-
-
-                    data_ptr->file_list.push_back(toPush);
-                    y = y + 40; 
-                    //TODO Question: for recursive anything else needed?
-                    if (filenames[i] != "." && filenames[i] != "..") {
-                         listDirectoryRecursive((dirname + "/" + filenames[i]), data_ptr->file_list, renderer, data_ptr, indent+1);
-                    }            
-                    
-                } else {
-
-                    
-                    drawItem *toPush = new drawItem();
-                    //fill in fields toPush
-                    SDL_Rect rect;
-                    rect.x = 60+indent_to_x;
-                    rect.y = y;
-                    rect.w = 30;
-                    rect.h = 30;
-                    toPush->icon_rect = rect;
-                    SDL_Rect name;
-                    name.x = 100+indent_to_x;
-                    name.y = rect.y+5;
-                    name.w = 60;
-                    name.h = 30;
-
-                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), data_ptr->text_color);
-                    toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
-                    SDL_FreeSurface(toPush->file_name_surface);
-                    toPush->file_name_rect = name;
-
-                    SDL_Rect size;
-                    size.x = 300+indent_to_x;
-                    size.y = rect.y+5;
-                    size.w = 60;
-                    size.h = 30;
-
-                    double size_int = file_info.st_size;
-                    toPush->file_size_surface  = TTF_RenderText_Solid(data_ptr->font, sizeToString(size_int).c_str(), data_ptr->text_color);
-                    toPush->file_size_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_size_surface);
-                    SDL_FreeSurface(toPush->file_size_surface);
-                    toPush->file_size_rect = size;
-
-                    SDL_Rect permissions;
-                    permissions.x = 400+indent_to_x;
-                    permissions.y = rect.y+5;
-                    permissions.w = 60;
-                    permissions.h = 30;
-
-                    std::string permission = file_permissions(&file_info);
-
-                    toPush->file_permissions_surface  = TTF_RenderText_Solid(data_ptr->font, permission.c_str(), data_ptr->text_color);
-                    toPush->file_permissions_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_permissions_surface);
-                    SDL_FreeSurface(toPush->file_permissions_surface);
-                    toPush->file_permissions_rect = permissions;
-
-
-                    int find = filenames[i].find('.');
-                    if(find < 0){
-                        find = 0;
-                    }
-                    std::string file_extension = filenames[i].substr(find);
-                      
-                    if(file_extension == ".jpg" || file_extension == ".jpeg" || file_extension == ".png" || file_extension == ".tif" 
-                    || file_extension == ".tiff" || file_extension == ".gif") {
-
-                        toPush->type = image_icon;
-                        y = y + 40;
-                        data_ptr->file_list.push_back(toPush);
-                    }else if(file_extension == ".mp4" || file_extension == ".mov" || file_extension == ".mkv" || file_extension == ".avi" 
-                    || file_extension == ".webm") {
-                        toPush->type = video_icon;
-                        y = y + 40;
-                        data_ptr->file_list.push_back(toPush);
-                    }else if(file_extension == ".h" || file_extension == ".c" || file_extension == ".cpp" || file_extension == ".py" 
-                    || file_extension == ".java" || file_extension == ".js") {
-                        toPush->type = code_icon;
-                        y = y + 40;
-                        data_ptr->file_list.push_back(toPush);
-                    }else if ((S_IEXEC & file_info.st_mode) != 0 && filenames[i] != "."){
-                        //Have to check if it's S_IXUSR or S_IEXEC later **
-                        toPush->type = executable_icon;
-                        y = y + 40;
-                        data_ptr->file_list.push_back(toPush);
-                    }else {
-                        if(filenames[i] != "."){
-                            toPush->type = other_icon;
-                            y = y + 40;
-                            data_ptr->file_list.push_back(toPush);
-                        }
-                    }
-
-                }// end of else statement (not a directory)
-            }// end of else statement (File exists)
-        }//end of for loop
-        closedir(dir);
-    }
-    else
-    {
-        fprintf(stderr, "Error: directory '%s' not found\n", dirname.c_str());
-    }   
 }
