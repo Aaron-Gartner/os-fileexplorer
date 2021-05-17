@@ -139,7 +139,7 @@ int main(int argc, char **argv)
                     }
                 } else {
                     for(int i = 0; i < data.file_list.size(); i++) {
-                        if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->icon_rect.x && event.button.x <= data.file_list[i]->icon_rect.x + data.file_list[i]->icon_rect.w && event.button.y >= data.file_list[i]->icon_rect.y && event.button.y <= data.file_list[i]->icon_rect.y + data.file_list[i]->icon_rect.h) {
+                        if ((event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->icon_rect.x && event.button.x <= data.file_list[i]->icon_rect.x + data.file_list[i]->icon_rect.w && event.button.y >= data.file_list[i]->icon_rect.y && event.button.y <= data.file_list[i]->icon_rect.y + data.file_list[i]->icon_rect.h) || (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->file_name_rect.x && event.button.x <= data.file_list[i]->file_name_rect.x + data.file_list[i]->file_name_rect.w && event.button.y >= data.file_list[i]->file_name_rect.y && event.button.y <= data.file_list[i]->file_name_rect.y + data.file_list[i]->file_name_rect.h)) {
                             data.icon_selected = true;
                             if (data.file_list[i]->type == 0) {
                                 if (!(data.recursive_turned_on)) {
@@ -161,11 +161,7 @@ int main(int argc, char **argv)
                             }
                             printf("The icon selected is type: %d\n", data.file_list[i]->type);
                             break;
-                        } else  if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->file_name_rect.x && event.button.x <= data.file_list[i]->file_name_rect.x + data.file_list[i]->file_name_rect.w && event.button.y >= data.file_list[i]->file_name_rect.y && event.button.y <= data.file_list[i]->file_name_rect.y + data.file_list[i]->file_name_rect.h) {
-                            data.file_name_selected = true;
-                            printf("The filename selected is type: %d\n", data.file_list[i]->type);
-                            break;
-                        }
+                        } 
                     }
                 }
                 break;
