@@ -30,6 +30,8 @@ typedef struct drawItem {
     icon_type type;
     std::string permissions;
     std::string fileNameAsString;
+    std::string filePath;
+
 } drawItem;
 
 typedef struct AppData {
@@ -72,7 +74,7 @@ int main(int argc, char **argv)
     char *home = getenv("HOME");
     printf("HOME: %s\n", home);
 
-    char *test = "/home/alix/OS";
+    //char *test = "/home/alix/OS";
 
     // initializing SDL as Video
     SDL_Init(SDL_INIT_VIDEO);
@@ -109,11 +111,8 @@ int main(int argc, char **argv)
                     }                    
                     listDirectoryNon_Rec(home, data.file_list, renderer, &data);
                     render(renderer, &data);
-                    //needs to be a decrement
-                    printf("Scroll up check\n");
                 } else if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.scroll_button_down.x && event.button.x <= data.scroll_button_down.x + data.scroll_button_down.w && event.button.y >= data.scroll_button_down.y && event.button.y <= data.scroll_button_down.y + data.scroll_button_down.h) {
                     data.scroll_button_down_selected = true;
-
                     n = n+1;
                     listDirectoryNon_Rec(home, data.file_list, renderer, &data);
                     if ( data.file_list.size() >= 13) {
@@ -121,42 +120,42 @@ int main(int argc, char **argv)
                     } else {
                         n = n-1;
                     } 
-                    std::cout << "n = " << n << " >> data.file_list.size() = " <<data.file_list.size() << std::endl;
-                    //needs to be a increment
-                    printf("Scroll down check\n");
                 } else if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.TurnRecursiveOn.x && event.button.x <= data.TurnRecursiveOn.x + data.TurnRecursiveOn.w && event.button.y >= data.TurnRecursiveOn.y && event.button.y <= data.TurnRecursiveOn.y + data.TurnRecursiveOn.h) {
                     data.TurnRecursiveOn_selected = true;
                     if (!(data.recursive_turned_on)) {
-                        printf("Recursive check recursive\n");
                         listDirectoryRecursive(home, data.file_list, renderer, &data, 0);
                         data.recursive_turned_on = true;
                         render(renderer, &data);
                     } else {
-                        printf("Recursive check not recursive\n");
                         listDirectoryNon_Rec(home, data.file_list, renderer, &data);
                         data.recursive_turned_on = false;
                         render(renderer, &data);
                     }
                 } else {
                     for(int i = 0; i < data.file_list.size(); i++) {
-                        if ((event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->icon_rect.x && event.button.x <= data.file_list[i]->icon_rect.x + data.file_list[i]->icon_rect.w && event.button.y >= data.file_list[i]->icon_rect.y && event.button.y <= data.file_list[i]->icon_rect.y + data.file_list[i]->icon_rect.h) || (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->file_name_rect.x && event.button.x <= data.file_list[i]->file_name_rect.x + data.file_list[i]->file_name_rect.w && event.button.y >= data.file_list[i]->file_name_rect.y && event.button.y <= data.file_list[i]->file_name_rect.y + data.file_list[i]->file_name_rect.h)) {
+                        if ((event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->icon_rect.x && event.button.x <= data.file_list[i]->icon_rect.x + data.file_list[i]->icon_rect.w && event.button.y >= data.file_list[i]->icon_rect.y && event.button.y <= data.file_list[i]->icon_rect.y + data.file_list[i]->icon_rect.h) 
+                        || (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->file_name_rect.x && event.button.x <= data.file_list[i]->file_name_rect.x + data.file_list[i]->file_name_rect.w && event.button.y >= data.file_list[i]->file_name_rect.y && event.button.y <= data.file_list[i]->file_name_rect.y + data.file_list[i]->file_name_rect.h)) {
                             data.icon_selected = true;
-                            if (data.file_list[i]->type == 0) {
+                            data.file_name_selected = true;
+
+                            if (data.file_list[i]->type == directory_icon) {
                                 if (!(data.recursive_turned_on)) {
+                                    std::cout<< data.file_list[i]->fileNameAsString.c_str() << std::endl; 
                                     listDirectoryNon_Rec(data.file_list[i]->fileNameAsString, data.file_list, renderer, &data);
                                     render(renderer, &data);
                                 } else {
 
+
                                 }
-                            } else if (data.file_list[i]->type == 1) {
+                            } else if (data.file_list[i]->type == executable_icon) {
                                 
-                            } else if (data.file_list[i]->type == 2) {
+                            } else if (data.file_list[i]->type == code_icon) {
                                 
-                            } else if (data.file_list[i]->type == 3) {
+                            } else if (data.file_list[i]->type == image_icon) {
                                 
-                            } else if (data.file_list[i]->type == 4) {
+                            } else if (data.file_list[i]->type == video_icon) {
                                 
-                            } else if (data.file_list[i]->type == 5) {
+                            } else if (data.file_list[i]->type == other_icon) {
                                 
                             }
                             printf("The icon selected is type: %d\n", data.file_list[i]->type);
@@ -355,6 +354,7 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     toPush->file_permissions_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_permissions_surface);
                     SDL_FreeSurface(toPush->file_permissions_surface);
                     toPush->file_permissions_rect = permissions;
+                    
 
 
                     data_ptr->file_list.push_back(toPush);
