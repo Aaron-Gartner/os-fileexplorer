@@ -316,20 +316,24 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                         if(file_extension == ".jpg" || file_extension == ".jpeg" || file_extension == ".png" || file_extension == ".tif" 
                         || file_extension == ".tiff" || file_extension == ".gif") {
                             toPush->type = image_icon;
+                            data_ptr->file_list.push_back(toPush);
                         }else if(file_extension == ".mp4" || file_extension == ".mov" || file_extension == ".mkv" || file_extension == ".avi" 
                         || file_extension == ".webm") {
                             toPush->type = video_icon;
+                            data_ptr->file_list.push_back(toPush);
                         }else if(file_extension == ".h" || file_extension == ".c" || file_extension == ".cpp" || file_extension == ".py" 
                         || file_extension == ".java" || file_extension == ".js") {
                             toPush->type = code_icon;
-
+                            data_ptr->file_list.push_back(toPush);
                         }else if ((S_IEXEC & info.st_mode) != 0 && filenames[i] != "."){
                             //Have to check if it's S_IXUSR or S_IEXEC later **
                             toPush->type = executable_icon;
+                            data_ptr->file_list.push_back(toPush);
 
                         }else {
                             if(filenames[i] != "."){
                                 toPush->type = other_icon;
+                                data_ptr->file_list.push_back(toPush);
                             }
                         }
 
@@ -337,7 +341,7 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                    
                     
                         
-                    data_ptr->file_list.push_back(toPush);
+                    
                 }
                 //y = y + 30;
             }
