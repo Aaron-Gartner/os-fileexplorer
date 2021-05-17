@@ -41,23 +41,11 @@ typedef struct AppData {
     SDL_Rect scroll_button_down;
     SDL_Rect TurnRecursiveOn;
     bool icon_selected;
-    bool filename_selected;
+    bool file_name_selected;
     bool scroll_button_down_selected;
     bool scroll_button_up_selected;
     bool TurnRecursiveOn_selected;
     bool recursive_turned_on;
-    /*
-    bool directory_icon_selected;
-    bool executable_icon_selected;
-    bool image_icon_selected;
-    bool video_icon_selected;
-    bool other_icon_selected;
-    bool code_filename_selected;
-    bool directory_name_selected;
-    bool executable_filename_selected;
-    bool image_filename_selected;
-    bool video_filename_selected;
-    bool other_filename_selected;*/
 } AppData;
 
 void listDirectoryRecursive(std::string dirname, std::vector<drawItem*>& file_list, SDL_Renderer *renderer, AppData *data_ptr, int indent);
@@ -69,9 +57,9 @@ void quit(AppData *data_ptr);
 int main(int argc, char **argv)
 {
     char *home = getenv("HOME");
-    printf("HOME: %s\n", home);
+    //printf("HOME: %s\n", home);
 
-    char *test = "/home/alix/OS";
+    //char *test = "/home/alix/OS";
 
     // initializing SDL as Video
     SDL_Init(SDL_INIT_VIDEO);
@@ -89,8 +77,7 @@ int main(int argc, char **argv)
     SDL_Event event;
     SDL_WaitEvent(&event);
     
-    
-    listDirectoryNon_Rec(test, data.file_list, renderer, &data);
+    listDirectoryNon_Rec(home, data.file_list, renderer, &data);
     render(renderer, &data);
 
     while (event.type != SDL_QUIT) {
@@ -101,23 +88,43 @@ int main(int argc, char **argv)
         switch (event.type) {
             //implement a button on the top and bottom not a scroll bar
             case SDL_MOUSEBUTTONDOWN:
-                /*
-                if (event.button.x >= data.directory_icon_location.x && data.directory_icon_location.x + data.directory_icon_location.w && event.button.x >= data.directory_icon_location.y && data.directory_icon_location.y + data.directory_icon_location.h) {
-                        data.directory_icon_selected = true;
-                        //data.phrase_offset.x = event.button.x -data.phrase_location.x;
-                        //data.phrase_offset.y = event.button.y - data.phrase_location.y;
-                } else if (event.button.x >= data.directory_name_location.x && data.directory_name_location.x + data.directory_name_location.w && event.button.x >= data.directory_name_location.y && data.directory_name_location.y + data.directory_name_location.h)  {
-                        data.directory_name_selected = true;
-                        
-                } else if (event.button.x >= data.code_icon_location.x && data.code_icon_location.x + data.code_icon_location.w && event.button.x >= data.code_icon_location.y && data.code_icon_location.y + data.code_icon_location.h)  {
-                        data.directory_name_selected = true;
-                        
-                } else if (event.button.x >= data.code_filename_location.x && data.code_filename_location.x + data.code_filename_location.w && event.button.x >= data.code_filename_location.y && data.code_filename_location.y + data.code_filename_location.h)  {
-                        data.directory_name_selected = true;
-                        
-                } */
+                if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.scroll_button_up.x && event.button.x <= data.scroll_button_up.x + data.scroll_button_up.w && event.button.y >= data.scroll_button_up.y && event.button.y <= data.scroll_button_up.y + data.scroll_button_up.h) {
+                    data.scroll_button_up_selected = true;
+                    //needs to be a decrement
+                    printf("Scroll up check\n");
+                } else if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.scroll_button_down.x && event.button.x <= data.scroll_button_down.x + data.scroll_button_down.w && event.button.y >= data.scroll_button_down.y && event.button.y <= data.scroll_button_down.y + data.scroll_button_down.h) {
+                    data.scroll_button_down_selected = true;
+                    //needs to be a increment
+                    printf("Scroll down check\n");
+                } else if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.TurnRecursiveOn.x && event.button.x <= data.TurnRecursiveOn.x + data.TurnRecursiveOn.w && event.button.y >= data.TurnRecursiveOn.y && event.button.y <= data.TurnRecursiveOn.y + data.TurnRecursiveOn.h) {
+                    data.TurnRecursiveOn_selected = true;
+                    printf("Recursive check\n");
+                    if (data.recursive_turned_on) {
+
+                        data.recursive_turned_on = false;
+                    } else {
+                        data.recursive_turned_on = true;
+                    }
+                } else {
+                    for(int i = 0; i < data.file_list.size(); i++) {
+                        if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->icon_rect.x && event.button.x <= data.file_list[i]->icon_rect.x + data.file_list[i]->icon_rect.w && event.button.y >= data.file_list[i]->icon_rect.y && event.button.y <= data.file_list[i]->icon_rect.y + data.file_list[i]->icon_rect.h) {
+                            data.icon_selected = true;
+                            printf("The icon selected is type: %d\n", data.file_list[i]->type);
+                            break;
+                        } else  if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->file_name_rect.x && event.button.x <= data.file_list[i]->file_name_rect.x + data.file_list[i]->file_name_rect.w && event.button.y >= data.file_list[i]->file_name_rect.y && event.button.y <= data.file_list[i]->file_name_rect.y + data.file_list[i]->file_name_rect.h) {
+                            data.file_name_selected = true;
+                            printf("The filename selected is type: %d\n", data.file_list[i]->type);
+                            break;
+                        }
+                    }
+                }
                 break;
             case SDL_MOUSEBUTTONUP:
+                data.scroll_button_up_selected = false;
+                data.scroll_button_down_selected = false;
+                data.TurnRecursiveOn_selected = false;
+                data.icon_selected = false;
+                data.file_name_selected = false;
                 break;
         }
 
@@ -282,10 +289,6 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                         y = y + 30;
                         
                     }*/
-
-
-                    //TODO Question: what to set for file_name_text? 
-                    //Look at video (the portion for hello world)
                     
                 } else {
                     std::cout << filenames[i].c_str() << std::endl;
