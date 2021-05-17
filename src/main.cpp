@@ -8,6 +8,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
+#include <unistd.h>
 
 #define WIDTH 800
 #define HEIGHT 600
@@ -29,6 +30,8 @@ typedef struct drawItem {
     SDL_Texture *file_permissions_texture;
     icon_type type;
     std::string permissions;
+    std::string fileNameAsString;
+    std::string filePath;
 } drawItem;
 
 typedef struct AppData {
@@ -60,6 +63,7 @@ void render(SDL_Renderer *renderer, AppData *data_ptr);
 void quit(AppData *data_ptr);
 std::string file_permissions(struct stat *file_info);
 std::string sizeToString(double size);
+void open_file(std::string name);
 
 int n = 0;
 int y = 40;
@@ -70,8 +74,6 @@ int main(int argc, char **argv)
 {
     char *home = getenv("HOME");
     printf("HOME: %s\n", home);
-
-    char *test = "/home/alix/OS";
 
     // initializing SDL as Video
     SDL_Init(SDL_INIT_VIDEO);
@@ -88,6 +90,8 @@ int main(int argc, char **argv)
     render(renderer, &data);
     SDL_Event event;
     SDL_WaitEvent(&event);
+
+    data.recursive_turned_on = false;
     
     listDirectoryNon_Rec(home, data.file_list, renderer, &data);
     render(renderer, &data);
@@ -107,38 +111,87 @@ int main(int argc, char **argv)
                     data.scroll_button_up_selected = true;
                     if(n-1 >= 0){
                         n = n-1;
-                    }                    
+                    }
                     listDirectoryNon_Rec(home, data.file_list, renderer, &data);
                     render(renderer, &data);
                 } else if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.scroll_button_down.x && event.button.x <= data.scroll_button_down.x + data.scroll_button_down.w && event.button.y >= data.scroll_button_down.y && event.button.y <= data.scroll_button_down.y + data.scroll_button_down.h) {
                     data.scroll_button_down_selected = true;
-
+                    
                     n = n+1;
                     listDirectoryNon_Rec(home, data.file_list, renderer, &data);
                     if( data.file_list.size() >= 13){
                         render(renderer, &data);
                     }else{
                         n = n-1;
+                        listDirectoryNon_Rec(home, data.file_list, renderer, &data);
+                        render(renderer, &data);
                     }
                 } else if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.TurnRecursiveOn.x && event.button.x <= data.TurnRecursiveOn.x + data.TurnRecursiveOn.w && event.button.y >= data.TurnRecursiveOn.y && event.button.y <= data.TurnRecursiveOn.y + data.TurnRecursiveOn.h) {
                     data.TurnRecursiveOn_selected = true;
                     printf("Recursive check\n");
                     if (data.recursive_turned_on) {
                         data.recursive_turned_on = false;
+                        render(renderer, &data);
                     } else {
                         data.recursive_turned_on = true;
+                        render(renderer, &data);
                     }
                 } else {
                     for(int i = 0; i < data.file_list.size(); i++) {
-                        if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->icon_rect.x && event.button.x <= data.file_list[i]->icon_rect.x + data.file_list[i]->icon_rect.w && event.button.y >= data.file_list[i]->icon_rect.y && event.button.y <= data.file_list[i]->icon_rect.y + data.file_list[i]->icon_rect.h) {
+                        if ((event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->icon_rect.x && event.button.x <= data.file_list[i]->icon_rect.x + data.file_list[i]->icon_rect.w && event.button.y >= data.file_list[i]->icon_rect.y && event.button.y <= data.file_list[i]->icon_rect.y + data.file_list[i]->icon_rect.h) 
+                        || (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->file_name_rect.x && event.button.x <= data.file_list[i]->file_name_rect.x + data.file_list[i]->file_name_rect.w && event.button.y >= data.file_list[i]->file_name_rect.y && event.button.y <= data.file_list[i]->file_name_rect.y + data.file_list[i]->file_name_rect.h)) {
                             data.icon_selected = true;
+                            data.file_name_selected = true;
+                            if (data.file_list[i]->type == directory_icon) {
+                                if (!(data.recursive_turned_on)) {
+                                    if(data.file_list[i]->fileNameAsString == ".."){
+                                        if(data.file_list[i]->filePath != "/home"){
+                                            int index = data.file_list[i]->filePath.find_last_of('/');
+                                            std::string newPath = data.file_list[i]->filePath.substr(0, index);
+                                            strcpy(home, newPath.c_str());
+                                            n=0;
+                                            listDirectoryNon_Rec(newPath, data.file_list, renderer, &data);
+                                            render(renderer, &data);
+                                        }
+                                    }else{
+                                        std::string newPath = data.file_list[i]->filePath + "/" + data.file_list[i]->fileNameAsString;
+                                        strcpy(home, newPath.c_str());
+                                        n=0;
+                                        listDirectoryNon_Rec(newPath, data.file_list, renderer, &data);
+                                        render(renderer, &data);
+                                    }
+                                    
+                                    
+                                } else {
+
+
+                                }
+                            } else if (data.file_list[i]->type == executable_icon) {
+                                std::string newPath = data.file_list[i]->filePath + "/" + data.file_list[i]->fileNameAsString;
+                                std::cout << "file to open full path + name" << newPath.c_str() << std::endl;
+                                open_file(newPath);
+                                //TODO Question: do we have to register a handler for this type of files?
+                            } else if (data.file_list[i]->type == code_icon) {
+                                std::string newPath = data.file_list[i]->filePath + "/" + data.file_list[i]->fileNameAsString;
+                                std::cout << "file to open full path + name" << newPath.c_str() << std::endl;
+                                open_file(newPath);
+                            } else if (data.file_list[i]->type == image_icon) {
+                                std::string newPath = data.file_list[i]->filePath + "/" + data.file_list[i]->fileNameAsString;
+                                std::cout << "file to open full path + name" << newPath.c_str() << std::endl;
+                                open_file(newPath);
+                                
+                            } else if (data.file_list[i]->type == video_icon) {
+                                std::string newPath = data.file_list[i]->filePath + "/" + data.file_list[i]->fileNameAsString;
+                                std::cout << "file to open full path + name" << newPath.c_str() << std::endl;
+                                open_file(newPath);
+                                
+                            } else if (data.file_list[i]->type == other_icon) {
+                                //TODO Question: not sure what should go there?
+                                
+                            }
                             printf("The icon selected is type: %d\n", data.file_list[i]->type);
                             break;
-                        } else  if (event.button.button == SDL_BUTTON_LEFT && event.button.x >= data.file_list[i]->file_name_rect.x && event.button.x <= data.file_list[i]->file_name_rect.x + data.file_list[i]->file_name_rect.w && event.button.y >= data.file_list[i]->file_name_rect.y && event.button.y <= data.file_list[i]->file_name_rect.y + data.file_list[i]->file_name_rect.h) {
-                            data.file_name_selected = true;
-                            printf("The filename selected is type: %d\n", data.file_list[i]->type);
-                            break;
-                        }
+                        } 
                     }
                 }
                 break;
@@ -182,7 +235,7 @@ void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
 
     SDL_Surface *img_surf3 = IMG_Load("resrc/other_icon.png");
     data_ptr->icons[other_icon] = SDL_CreateTextureFromSurface(renderer, img_surf3);
-    SDL_FreeSurface(img_surf);
+    SDL_FreeSurface(img_surf3);
 
     SDL_Surface *img_surf4 = IMG_Load("resrc/photo_icon.png");
     data_ptr->icons[image_icon] = SDL_CreateTextureFromSurface(renderer, img_surf4);
@@ -213,12 +266,22 @@ void render(SDL_Renderer *renderer, AppData *data_ptr) {
     data_ptr->scroll_button_down.w = 800;
     data_ptr->scroll_button_down.h = 30;
     SDL_RenderFillRect(renderer, &(data_ptr->scroll_button_down));
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-    data_ptr->TurnRecursiveOn.x = 0;
-    data_ptr->TurnRecursiveOn.y = 250;
-    data_ptr->TurnRecursiveOn.w =60;
-    data_ptr->TurnRecursiveOn.h =100;
-    SDL_RenderFillRect(renderer, &(data_ptr->TurnRecursiveOn));
+    if(data_ptr->recursive_turned_on){
+        SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+        data_ptr->TurnRecursiveOn.x = 0;
+        data_ptr->TurnRecursiveOn.y = 250;
+        data_ptr->TurnRecursiveOn.w =60;
+        data_ptr->TurnRecursiveOn.h =100;
+        SDL_RenderFillRect(renderer, &(data_ptr->TurnRecursiveOn));
+    }else{
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        data_ptr->TurnRecursiveOn.x = 0;
+        data_ptr->TurnRecursiveOn.y = 250;
+        data_ptr->TurnRecursiveOn.w =60;
+        data_ptr->TurnRecursiveOn.h =100;
+        SDL_RenderFillRect(renderer, &(data_ptr->TurnRecursiveOn));
+    }
+    
 
 
 
@@ -303,6 +366,8 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     name.w = 60;
                     name.h = 30;
 
+                    toPush->fileNameAsString = filenames[i].c_str();
+                    toPush->filePath = dirname.c_str();
                     toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), data_ptr->text_color);
                     toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
                     SDL_FreeSurface(toPush->file_name_surface);
@@ -330,9 +395,9 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     toPush->file_permissions_surface  = TTF_RenderText_Solid(data_ptr->font, permission.c_str(), data_ptr->text_color);
                     toPush->file_permissions_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_permissions_surface);
                     SDL_FreeSurface(toPush->file_permissions_surface);
-                    toPush->file_permissions_rect = permissions;
+                    toPush->file_permissions_rect = permissions;                    
 
-
+                    
                     data_ptr->file_list.push_back(toPush);
                     y = y + 40;             
                     
@@ -353,7 +418,20 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     name.w = 60;
                     name.h = 30;
 
-                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, filenames[i].c_str(), data_ptr->text_color);
+                    std::string permission = file_permissions(&file_info);
+
+                    std::string tempString = filenames[i].c_str();
+                    if(tempString.size() > 20){
+                        tempString = tempString.substr(0, 20) + "...";
+                        toPush->fileNameAsString = tempString;
+                    }else{
+                        toPush->fileNameAsString = filenames[i].c_str();
+                        toPush->filePath = dirname.c_str();
+                    }
+
+                    std::cout << "temp String:- " << tempString << std::endl;
+
+                    toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, tempString.c_str(), data_ptr->text_color);
                     toPush->file_name_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_name_surface);
                     SDL_FreeSurface(toPush->file_name_surface);
                     toPush->file_name_rect = name;
@@ -376,7 +454,8 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     permissions.w = 60;
                     permissions.h = 30;
 
-                    std::string permission = file_permissions(&file_info);
+                    
+                    
 
                     toPush->file_permissions_surface  = TTF_RenderText_Solid(data_ptr->font, permission.c_str(), data_ptr->text_color);
                     toPush->file_permissions_texture = SDL_CreateTextureFromSurface(renderer, toPush->file_permissions_surface);
@@ -522,5 +601,12 @@ std::string sizeToString(double size){
         return rounded;
     }
 
+}
+
+void open_file(std::string name){
+    int pid = fork();
+    if (pid == 0) {
+        execl("/usr/bin/xdg-open", "xdg-open", name.c_str(), NULL);
+    }
 }
 
