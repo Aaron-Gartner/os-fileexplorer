@@ -182,7 +182,7 @@ void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
 
     SDL_Surface *img_surf3 = IMG_Load("resrc/other_icon.png");
     data_ptr->icons[other_icon] = SDL_CreateTextureFromSurface(renderer, img_surf3);
-    SDL_FreeSurface(img_surf3);
+    SDL_FreeSurface(img_surf);
 
     SDL_Surface *img_surf4 = IMG_Load("resrc/photo_icon.png");
     data_ptr->icons[image_icon] = SDL_CreateTextureFromSurface(renderer, img_surf4);
