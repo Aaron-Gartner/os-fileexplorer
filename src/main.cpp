@@ -467,14 +467,12 @@ void listDirectoryNon_Rec(std::string dirname, std::vector<drawItem*>& file_list
                     name.h = 30;
 
                     std::string permission = file_permissions(&file_info);
+                    toPush->fileNameAsString = filenames[i].c_str();
+                    toPush->filePath = dirname.c_str();
 
                     std::string tempString = filenames[i].c_str();
                     if(tempString.size() > 20){
                         tempString = tempString.substr(0, 20) + "...";
-                        toPush->fileNameAsString = tempString;
-                    }else{
-                        toPush->fileNameAsString = filenames[i].c_str();
-                        toPush->filePath = dirname.c_str();
                     }
 
                     toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, tempString.c_str(), data_ptr->text_color);
@@ -658,13 +656,11 @@ void listDirectoryRecursive(std::string dirname, std::vector<drawItem*>& file_li
 
                     std::string permission = file_permissions(&file_info);
 
+                    toPush->fileNameAsString = filenames[i].c_str();
                     std::string tempString = filenames[i].c_str();
+                    toPush->filePath = dirname.c_str();
                     if(tempString.size() > 20){
                         tempString = tempString.substr(0, 20) + "...";
-                        toPush->fileNameAsString = tempString;
-                    }else{
-                        toPush->fileNameAsString = filenames[i].c_str();
-                        toPush->filePath = dirname.c_str();
                     }
 
                     toPush->file_name_surface  = TTF_RenderText_Solid(data_ptr->font, tempString.c_str(), data_ptr->text_color);
