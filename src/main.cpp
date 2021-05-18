@@ -57,14 +57,6 @@ typedef struct AppData {
     bool scroll_button_up_selected;
     bool TurnRecursiveOn_selected;
     bool recursive_turned_on;
-    SDL_Surface *scroll_button_up_sur;
-    SDL_Texture *scroll_button_up_tex;
-    SDL_Surface *scroll_button_down_sur;
-    SDL_Texture *scroll_button_down_tex;
-    SDL_Surface *TurnRecursiveOn_button_sur;
-    SDL_Texture *TurnRecursiveOn_button_tex;
-    SDL_Surface *TurnRecursiveOFF_button_sur;
-    SDL_Texture *TurnRecursiveOFF_button_tex;
 } AppData;
 
 void listDirectoryRecursive(std::string dirname, std::vector<drawItem*>& file_list, SDL_Renderer *renderer, AppData *data_ptr, int indent);
@@ -278,22 +270,6 @@ void initialize(SDL_Renderer *renderer, AppData *data_ptr) {
     SDL_Surface *img_surf6 = IMG_Load("resrc/executable_icon.png");
     data_ptr->icons[executable_icon] = SDL_CreateTextureFromSurface(renderer, img_surf6);
     SDL_FreeSurface(img_surf6);
-
-    data_ptr->scroll_button_up_sur = TTF_RenderText_Solid(data_ptr->font, "Scroll up", data_ptr->text_color);
-    data_ptr->scroll_button_up_tex = SDL_CreateTextureFromSurface(renderer, data_ptr->scroll_button_up_sur);
-    SDL_FreeSurface(data_ptr->scroll_button_up_sur);
-
-    data_ptr->scroll_button_down_sur = TTF_RenderText_Solid(data_ptr->font, "Scroll down", data_ptr->text_color);
-    data_ptr->scroll_button_down_tex = SDL_CreateTextureFromSurface(renderer, data_ptr->scroll_button_down_sur);
-    SDL_FreeSurface(data_ptr->scroll_button_down_sur);
-
-    data_ptr->TurnRecursiveOn_button_sur = TTF_RenderText_Solid(data_ptr->font, "ON", data_ptr->text_color);
-    data_ptr->TurnRecursiveOn_button_tex = SDL_CreateTextureFromSurface(renderer, data_ptr->TurnRecursiveOn_button_sur);
-    SDL_FreeSurface(data_ptr->TurnRecursiveOn_button_sur);
-
-    data_ptr->TurnRecursiveOFF_button_sur = TTF_RenderText_Solid(data_ptr->font, "OFF", data_ptr->text_color);
-    data_ptr->TurnRecursiveOFF_button_tex = SDL_CreateTextureFromSurface(renderer, data_ptr->TurnRecursiveOFF_button_sur );
-    SDL_FreeSurface(data_ptr->TurnRecursiveOFF_button_sur);
 
 }
 
